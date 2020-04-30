@@ -1,0 +1,18 @@
+.photoes{
+    height: 800px;
+    background-color: rgb(223, 223, 223);
+}
+
+.photoes .carousel{
+    height: 100%;
+}
+
+.carousel-item{
+    height: 100%;
+}
+
+.photoes img{
+    height: 100%;
+    margin: 0 auto;
+}
+
