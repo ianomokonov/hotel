@@ -11,32 +11,174 @@
       crossorigin="anonymous"
     />
     <link rel="stylesheet" href="../../styles.css" />
+    <script
+      src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
+      integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+      integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+      crossorigin="anonymous"
+    ></script>
   </head>
   <body>
     <div class="container">
-      <div class="user-info">
+      <div class="user-info mt-3 border rounded p-3" id="userForm"></div>
+      <ul class="nav nav-tabs mt-3" id="myTab" role="tablist">
+        <li class="nav-item">
+          <a
+            class="nav-link active"
+            id="history-tab"
+            data-toggle="tab"
+            href="#history"
+            role="tab"
+            aria-controls="history"
+            aria-selected="true"
+            >История заказов</a
+          >
+        </li>
+        <li class="nav-item">
+          <a
+            class="nav-link"
+            id="capacity-tab"
+            data-toggle="tab"
+            href="#capacity"
+            role="tab"
+            aria-controls="capacity"
+            aria-selected="false"
+            >Загруженность номеров</a
+          >
+        </li>
+      </ul>
+      <div class="tab-content" id="myTabContent">
+        <div
+          class="tab-pane fade show active"
+          id="history"
+          role="tabpanel"
+          aria-labelledby="history-tab"
+        >
+          <div class="rooms"></div>
+        </div>
+        <div
+          class="tab-pane fade"
+          id="capacity"
+          role="tabpanel"
+          aria-labelledby="capacity-tab"
+        >
+          ...
+        </div>
+      </div>
+    </div>
+    <script type="module">
+      import ApiService from "../../services/api.service.js";
+      import SearchService from "../../services/search.service.js";
+      let service = new ApiService();
+      let searchService = new SearchService();
+      let roomsElem = document.querySelector(".rooms");
+      let userInfo;
+
+      let cancelOrder = ({
+        target: {
+          dataset: { id: orderId },
+        },
+      }) => {
+        service.cancelOrder(orderId).then(() => {
+          alert("Заказ успешно отменен");
+          getHistory();
+        });
+      };
+
+      service.getUserInfo().then((user) => {
+        if (user) {
+          userInfo = user;
+          userForm.innerHTML = `
         <h3>Ваши данные</h3>
         <div class="row">
           <div class="col-6">
             <div class="form-group">
               <label>ФИО</label>
-              <h6>Номоконов ИВван Александрович</h6>
+              <h6>${`${user.surname} ${user.name} ${user.middlename}`}</h6>
             </div>
           </div>
           <div class="col-6">
             <div class="form-group">
               <label>Email</label>
-              <h6>nomokono.vana@yandex.ru</h6>
+              <h6>${user.email}</h6>
             </div>
           </div>
           <div class="col-4">
             <div class="form-group">
               <label>Телефон</label>
-              <h6>89161999845</h6>
+              <h6>${user.phone}</h6>
             </div>
           </div>
         </div>
-      </div>
-    </div>
+        `;
+          getHistory();
+        }
+      });
+
+      function getDate(date) {
+        return new Date(date).toLocaleDateString();
+      }
+
+      function getHistory() {
+        service.getHistory().then((orders) => {
+          roomsElem.innerHTML = "";
+          if (!orders || !orders.length) {
+            roomsElem.innerHTML = `
+              <div class='text-center mt-3'>
+                <small class='text-muted text-center d-block'>Вы не сделали ни одного заказа</small>
+                <a class='btn btn-link pt-0' href='../home/home.html#filterForm'>Сделать заказ</a>
+              <div>`;
+            return;
+          }
+          orders.forEach((order) => {
+            let roomElem = document.createElement("div");
+            let periodDays = searchService.getPeriod(
+              new Date(order.dateFrom),
+              new Date(order.dateTo)
+            );
+            roomElem.innerHTML = `
+              <div class="row mt-3">
+                <div class="col-2">
+                  <img class="w-100" src="${order.room.img}" />
+                </div>
+                <div class="col">
+                  <h4 class="room-title">
+                    ${order.room.name}
+                  </h4>
+                  <div class="room-description">
+                    ${getDate(order.dateFrom)}
+                    ${order.dateTo ? " - " + getDate(order.dateTo) : ""}
+                    <span class="ml-3">${
+                      order.breakfast ? "Завтраки включены" : ""
+                    }</span>
+                  </div>
+                  <div class="mt-1 ${userInfo.isAdmin === '1' ? '' : 'd-none'}">
+                    <span class="mr-3">${`${userInfo.surname} ${userInfo.name} ${userInfo.middlename}`}</span>  
+                    <span class="mr-3">${userInfo.email}</span>  
+                    <span class="mr-3">${userInfo.phone}</span>  
+                  </div>
+                </div>
+                <div class="col-2 text-right">
+                  <div>${order.orderSum} руб</div>
+                  <div class="btn btn-outline-danger mt-3 ${
+                    order.cancel ? "" : "d-none"
+                  }" data-id="${order.id}">Отменить</div>
+                </div>
+              </div>
+            `;
+            roomsElem.append(roomElem.firstElementChild);
+            if (order.cancel) {
+              roomsElem
+                .querySelector(".btn")
+                .addEventListener("click", cancelOrder);
+            }
+          });
+        });
+      }
+    </script>
   </body>
 </html>

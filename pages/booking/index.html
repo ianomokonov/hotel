@@ -39,13 +39,34 @@
       let userService = new UserService();
       let userForm = document.querySelector(".user-form");
       let bookingForm = document.querySelector(".booking-form");
+      let userInfo;
+      let periodDays;
 
       let onEnterClick = () => {
         userService.saveRedirect("/booking");
         window.location.href = service.url + "/enter";
       };
 
+      let onSubmitClick = () => {
+        const order = {
+          roomId: searchService.room.id,
+          dateFrom: searchService.filters.fromDate,
+          dateTo: searchService.filters.toDate,
+          orderSum: searchService.getPrice(
+                  searchService.filters,
+                  searchService.room.price
+                ) * periodDays,
+          breakfast: searchService.filters.breakfast,
+          cancel: searchService.filters.cancel
+        }
+        service.addOrder(order).then((r) => {
+          window.location.href = service.url + "/profile";
+        })
+      };
+
       enter.addEventListener("click", onEnterClick);
+      submit.addEventListener("click", onSubmitClick);
+
 
       service.getUserInfo().then((user) => {
         if (user) {
@@ -91,7 +112,7 @@
         Object.keys(searchService.filters).length &&
         searchService.room
       ) {
-        let periodDays = searchService.getPeriod(
+        periodDays = searchService.getPeriod(
           new Date(searchService.filters.fromDate),
           new Date(searchService.filters.toDate)
         );

@@ -22,10 +22,11 @@ CREATE TABLE IF NOT EXISTS roomOrder(
     id int(10) PRIMARY KEY AUTO_INCREMENT,
     userId int(10) NOT NULL,
     roomId int(10) NOT NULL,
-    placeId int(10) NULL,
     dateFrom DATE NOT NULL,
     dateTo DATE NULL,
     orderSum int(10) NOT NULL,
+    breakfast bit NULL,
+    cancel bit NULL,
     FOREIGN KEY (userId) REFERENCES user(id),
     FOREIGN KEY (roomId) REFERENCES room(id),
 );

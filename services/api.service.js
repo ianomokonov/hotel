@@ -47,8 +47,23 @@ export class ApiService {
     return this.post(url, data);
   }
 
+  addOrder(data) {
+    const url = `${this.baseUrl}?key=add-order&token=${this.userService.token}`;
+    return this.post(url, data);
+  }
+
+  cancelOrder(id) {
+    const url = `${this.baseUrl}?key=cancel-order&orderId=${id}&token=${this.userService.token}`;
+    return this.get(url);
+  }
+
   getUserInfo() {
     const url = `${this.baseUrl}?key=get-user-info&token=${this.userService.token}`;
+    return this.get(url);
+  }
+
+  getHistory() {
+    const url = `${this.baseUrl}?key=get-history&token=${this.userService.token}`;
     return this.get(url);
   }
 

@@ -62,7 +62,7 @@
                 return array("message" => "Введите id автомобиля", "method" => "GetRoomDates", "requestData" => $roomId);
             }
 
-            $str = "SELECT id, dateFrom, dateTo from roomOrder WHERE dateFrom > now() AND roomId = ? AND status IN (1,2)";
+            $str = "SELECT id, dateFrom, dateTo from roomOrder WHERE dateFrom > now() AND roomId = ?";
             if($orderId){
                 $str = $str." AND id != $orderId";
             }
@@ -78,9 +78,9 @@
             if($userId == null){
                 return array("message" => "Введите id пользователя", "method" => "GetHistory", "requestData" => $userId);
             }
-            $text = "SELECT * from roomOrder WHERE userId = ? ORDER BY status ASC, dateFrom DESC";
+            $text = "SELECT * from roomOrder WHERE userId = ? ORDER BY dateFrom DESC";
             if($isAdmin){
-                $text = "SELECT * from roomOrder ORDER BY status ASC, dateFrom DESC";
+                $text = "SELECT * from roomOrder ORDER BY dateFrom DESC";
             }
             $query = $this->database->db->prepare($text);
             $query->execute(array($userId));
@@ -134,7 +134,7 @@
             if(!$orderId){
                 return array("message" => "Укажите id заказа", "method" => "CancelOrder", "requestData" => $orderId);
             }
-            $query = $this->database->db->prepare("UPDATE roomOrder SET status=3 WHERE id=?");
+            $query = $this->database->db->prepare("DELETE FROM roomOrder WHERE id=?");
             $query->execute(array($orderId));
             return array('message' => 'Заказ отменен');
         }
@@ -161,7 +161,7 @@
         }
 
         public function getUserInfo($userId){
-            $sth = $this->database->db->prepare("SELECT name, surname, middlename, phone, email FROM user WHERE id = ? LIMIT 1");
+            $sth = $this->database->db->prepare("SELECT name, surname, middlename, phone, email, isAdmin FROM user WHERE id = ? LIMIT 1");
             $sth->setFetchMode(PDO::FETCH_CLASS, 'User');
             $sth->execute(array($userId));
             return $sth->fetch();
