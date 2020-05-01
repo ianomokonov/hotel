@@ -19,37 +19,18 @@
 
         public function GetRooms($query){
             
-            $queryText = "SELECT * FROM room ";
-            if(isset($query['priceFrom']) && $priceFrom = $query['priceFrom']){
-                $queryText = $queryText."WHERE price > $priceFrom ";
-            }
-            if(isset($query['priceTo']) && $priceTo = $query['priceTo']){
-                if(isset($priceFrom)) {
-                    $queryText = $queryText."AND ";
-                } else {
-                    $queryText = $queryText."WHERE ";
-                }
-                $queryText = $queryText."price < $priceTo ";
-            }
+            $queryText = "SELECT * FROM room WHERE ";
             if(isset($query['dateFrom']) && isset($query['dateTo']) && !!($dateFrom = $query['dateFrom']) && $dateTo = $query['dateTo']){
-                if(isset($priceFrom) || isset($priceTo)) {
-                    $queryText = $queryText."AND ";
-                } else {
-                    $queryText = $queryText."WHERE ";
-                }
-                $queryText = $queryText."0 = (SELECT COUNT(*) FROM roomOrder co WHERE co.roomId = room.id ) OR 0 = (SELECT COUNT(*) FROM roomOrder co WHERE co.status IN (1,2) AND co.dateFrom = '$dateFrom' OR co.dateTo = '$dateTo' OR co.dateFrom > '$dateFrom' AND co.dateTo < '$dateTo' OR co.dateFrom < '$dateFrom' AND co.dateTo > '$dateTo' OR co.dateFrom > '$dateFrom' AND co.dateFrom < '$dateTo' AND co.dateTo > '$dateTo' OR co.dateTo > '$dateFrom' AND co.dateTo < '$dateTo' AND co.dateFrom < '$dateFrom') ";
+                $queryText = $queryText."0 = (SELECT COUNT(*) FROM roomOrder co WHERE co.roomId = room.id ) OR 0 = (SELECT COUNT(*) FROM roomOrder co WHERE co.dateFrom = '$dateFrom' OR co.dateTo = '$dateTo' OR co.dateFrom > '$dateFrom' AND co.dateTo < '$dateTo' OR co.dateFrom < '$dateFrom' AND co.dateTo > '$dateTo' OR co.dateFrom > '$dateFrom' AND co.dateFrom < '$dateTo' AND co.dateTo > '$dateTo' OR co.dateTo > '$dateFrom' AND co.dateTo < '$dateTo' AND co.dateFrom < '$dateFrom') AND";
             }
             if(!isset($query['dateTo']) && isset($query['dateFrom']) && $dateFrom = $query['dateFrom']){
-                if(isset($priceFrom) || isset($priceTo)) {
-                    $queryText = $queryText."AND ";
-                } else {
-                    $queryText = $queryText."WHERE ";
-                }
-                $queryText = $queryText."0 = (SELECT COUNT(*) FROM roomOrder co WHERE co.roomId = room.id ) OR 0 = (SELECT COUNT(*) FROM roomOrder co WHERE co.status IN (1,2) AND co.dateFrom = '$dateFrom' OR co.dateTo = '$dateFrom' OR co.dateFrom < '$dateFrom' AND co.dateTo > '$dateFrom') ";
+                $queryText = $queryText."0 = (SELECT COUNT(*) FROM roomOrder co WHERE co.roomId = room.id ) OR 0 = (SELECT COUNT(*) FROM roomOrder co WHERE co.dateFrom = '$dateFrom' OR co.dateTo = '$dateFrom' OR co.dateFrom < '$dateFrom' AND co.dateTo > '$dateFrom') AND";
             }
-            if(isset($query['limit']) && $limit = $query['limit']){
-                $queryText = $queryText."LIMIT $limit";
+            if(isset($query['count']) && $count = $query['count']){
+                $queryText = $queryText." roomCount >= $count";
             }
+            $queryText = rtrim($queryText,'AND');
+            $queryText = rtrim($queryText,'WHERE ');
             // return $queryText;
             $query = $this->database->db->query($queryText);
             $query->setFetchMode(PDO::FETCH_CLASS, 'Room');

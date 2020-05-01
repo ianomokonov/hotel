@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Вход</title>
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+      integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
+      crossorigin="anonymous"
+    />
+  </head>
+  <body class="d-flex justify-content-center">
+    <div class="card border-primary w-50 mt-5">
+      <div class="card-header text-primary bg-light">
+        <b id="headerTitle">Вход в личный кабинет</b>
+      </div>
+      <form class="card-body" id="userForm">
+        <div class="row registration">
+          <div class="col-sm-6 mb-3">
+            <label>Фамилия</label
+            ><input type="text" name="surname" class="form-control" />
+          </div>
+          <div class="col-sm-6 mb-3">
+            <label>Имя</label
+            ><input type="text" name="name" class="form-control" />
+          </div>
+          <div class="col-sm-6 mb-3">
+            <label>Отчество</label
+            ><input type="text" name="middlename" class="form-control" />
+          </div>
+          <div class="col-sm-6 mb-3">
+            <label>Телефон</label
+            ><input type="text" name="phone" class="form-control" />
+          </div>
+        </div>
+
+        <div class="row mb-3">
+          <div class="col-sm-12 mb-3">
+            <label>Email</label
+            ><input type="email" name="email" class="form-control" />
+          </div>
+          <div class="col-sm-12 mb-3">
+            <label>Пароль</label
+            ><input type="password" name="password" class="form-control" />
+          </div>
+        </div>
+        <button type="button" name="enter" class="btn btn-primary">Вход</button>
+        <button type="button" name="reg" class="btn btn-link">
+          Регистрация
+        </button>
+      </form>
+    </div>
+    <script type="module">
+      import ApiService from "../../services/api.service.js";
+      import UserService from "../../services/user.service.js";
+      let service = new ApiService();
+      let userService = new UserService();
+      let enter = true;
+
+      let regFields = document.querySelector(".registration");
+      setEnter(enter);
+      let onEnter = () => {
+        console.log(userForm.elements);
+        if (
+          enter &&
+          userForm.elements.email.value &&
+          userForm.elements.password.value
+        ) {
+          service
+            .signIn(
+              userForm.elements.email.value,
+              userForm.elements.password.value
+            )
+            .then((token) => {
+              console.log(token);
+              userService.saveToken(token);
+              window.location.href = service.url + userService.redirect;
+            });
+        }
+
+        if(!enter){
+            let {email, surname, name, password, middlename, phone} = userForm.elements;
+            if(!email.value || !password.value || !name.value || !surname.value){
+                return;
+            }
+
+            let user = {
+                email: email.value,
+                password: password.value,
+                name: name.value,
+                surname: surname.value,
+                middlename: middlename.value,
+                phone: phone.value
+            }
+
+            service
+            .signUp(
+              user
+            )
+            .then((token) => {
+              
+            });
+        }
+      };
+      let reg = () => {
+        enter = !enter;
+        setEnter(enter);
+      };
+      userForm.elements.enter.addEventListener("click", onEnter);
+      userForm.elements.reg.addEventListener("click", reg);
+
+      function setEnter(enter) {
+        if (enter) {
+          headerTitle.innerText = "Вход в личный кабинет";
+          regFields.classList.add("d-none");
+          userForm.elements.enter.innerText = "Вход";
+          userForm.elements.reg.innerText = "Регистрация";
+        } else {
+          headerTitle.innerText = "Регистрация";
+          regFields.classList.remove("d-none");
+          userForm.elements.enter.innerText = "Регистрация";
+          userForm.elements.reg.innerText = "Вход";
+        }
+      }
+    </script>
+  </body>
+</html>

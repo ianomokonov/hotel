@@ -1,6 +1,10 @@
+import UserService from './user.service.js';
+
 export class ApiService {
   constructor() {
     this.baseUrl = "http://localhost/hotel/controller.php";
+    this.url = "http://localhost/hotel/pages";
+    this.userService = new UserService();
   }
 
   get(url) {
@@ -34,18 +38,31 @@ export class ApiService {
   }
 
   signIn(email, password) {
-    const url = `${this.base_url}key=sign-in`;
+    const url = `${this.baseUrl}?key=sign-in`;
     return this.post(url, { email, password });
   }
 
-  getRooms(fromDate = null, toDate = null) {
+  signUp(data) {
+    const url = `${this.baseUrl}?key=sign-up`;
+    return this.post(url, data);
+  }
+
+  getUserInfo() {
+    const url = `${this.baseUrl}?key=get-user-info&token=${this.userService.token}`;
+    return this.get(url);
+  }
+
+  getRooms(filters) {
     const url = new URL(this.baseUrl);
     url.searchParams.set("key", "get-rooms");
-    if (fromDate) {
-      url.searchParams.set("dateFrom", this.dateToString(fromDate));
+    if (filters.fromDate) {
+      url.searchParams.set("dateFrom", filters.fromDate);
     }
-    if (toDate) {
-      url.searchParams.set("dateTo", this.ngbDateToString(toDate));
+    if (filters.toDate && filters.toDate != filters.fromDate) {
+      url.searchParams.set("dateTo", filters.toDate);
+    }
+    if (filters.count) {
+      url.searchParams.set("count", filters.count);
     }
     return this.get(url.href);
   }

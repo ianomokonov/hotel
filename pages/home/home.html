@@ -102,7 +102,7 @@
           <p>Мы говорим на вашем языке!</p>
         </div>
         <div class="filters bg-light p-3">
-          <form>
+          <form id="filterForm">
             <div class="row">
               <div class="col">
                 <div class="form-group">
@@ -113,7 +113,11 @@
               <div class="col">
                 <div class="form-group">
                   <label>Дата выезда</label>
-                  <input class="form-control" type="date" name="toDate" />
+                  <input
+                    class="form-control"
+                    type="date"
+                    name="toDate"
+                  />
                 </div>
               </div>
               <div class="col">
@@ -149,9 +153,9 @@
             </div>
           </form>
         </div>
-        <div class="rooms my-3">
+        <div class="my-3">
           <h2 class="mb-3">Наличие мест</h2>
-            
+          <div class="rooms"></div>
         </div>
       </div>
     </div>
@@ -170,37 +174,111 @@
       integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
       crossorigin="anonymous"
     ></script>
-    
 
     <script type="module">
-      import ApiService from '../../services/api.service.js';
+      import ApiService from "../../services/api.service.js";
+      import SearchService from "../../services/search.service.js";
       let service = new ApiService();
-      let roomsElem = document.querySelector('.rooms');
-      service.getRooms().then(rooms => {
-        rooms.forEach(room => {
-          let roomElem = document.createElement('div');
-          roomElem.innerHTML = `
-            <div class="row mb-3">
-              <div class="col-2">
-                <img class="w-100" src="${room.img}" />
-              </div>
-              <div class="col">
-                <h4 class="room-title">
-                  ${room.name}
-                </h4>
-                <div class="room-description">
-                  ${room.description}
+      let searchService = new SearchService();
+      let roomsElem = document.querySelector(".rooms");
+      let roomList = [];
+      let filters = searchService.filters;
+
+      Object.keys(filters).forEach((key) => {
+        if (key === "cancel" || key === "breakfast") {
+          filterForm.elements[key].checked = filters[key];
+        } else {
+          filterForm.elements[key].value = filters[key];
+        }
+      });
+
+      let filterChange = () => {
+        let {
+          elements: { fromDate, toDate, breakfast, cancel, count },
+        } = filterForm;
+        filters = {
+          fromDate: fromDate.value,
+          toDate: toDate.value,
+          breakfast: breakfast.checked,
+          cancel: cancel.checked,
+          count: count.value,
+        };
+        let from = new Date(filters.fromDate);
+        let to = new Date(filters.toDate);
+        if (
+          filters.fromDate &&
+          filters.toDate &&
+          from.getTime() > to.getTime()
+        ) {
+          filters.toDate = "";
+          toDate.value = null;
+        }
+
+        if (!filters.toDate) {
+          toDate.value = filters.fromDate;
+        }
+
+        if (filters.fromDate) {
+          toDate.disabled = false;
+          toDate.min = filters.fromDate;
+        } else {
+          toDate.disabled = true;
+        }
+        searchService.saveFilters(filters);
+        getRooms(filters);
+      };
+
+      filterChange();
+
+      function getRooms(filters) {
+        if (!filters.fromDate) {
+          roomsElem.innerHTML =
+            "<small class='text-muted d-block text-center'>Укажите период бронирования</small>";
+          return;
+        }
+        service.getRooms(filters).then((rooms) => {
+          roomList = rooms;
+          roomsElem.innerHTML = "";
+          rooms.forEach((room) => {
+            let roomElem = document.createElement("div");
+            roomElem.innerHTML = `
+              <div class="row mb-3">
+                <div class="col-2">
+                  <img class="w-100" src="${room.img}" />
+                </div>
+                <div class="col">
+                  <h4 class="room-title">
+                    ${room.name}
+                  </h4>
+                  <div class="room-description">
+                    ${room.description}
+                  </div>
+                </div>
+                <div class="col-2 text-right">
+                  <div>${searchService.getPrice(filters, room.price)} руб / сутки</div>
+                  <div class="btn btn-primary mt-3" data-id="${
+                    room.id
+                  }">Забронировать</div>
                 </div>
               </div>
-              <div class="col-2 text-right">
-                <div>${room.price} руб / сутки</div>
-                <div class="btn btn-primary mt-3">Забронировать</div>
-              </div>
-            </div>
-          `;
-          roomsElem.append(roomElem.firstElementChild)
-        })
-      })
+            `;
+            roomsElem.append(roomElem.firstElementChild);
+            roomsElem.querySelector(".btn").addEventListener("click", bookRoom);
+          });
+        });
+      }
+
+      
+
+      filterForm.addEventListener("input", filterChange);
+
+      let bookRoom = ({ target: element } = {}) => {
+        let room = roomList.find((room) => room.id == element.dataset.id);
+        searchService.saveRoom(room);
+        window.location.href = service.url + '/booking';
+      };
+
+      getRooms(filters);
     </script>
   </body>
 </html>
