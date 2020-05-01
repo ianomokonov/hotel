@@ -151,7 +151,7 @@
         </div>
         <div class="rooms my-3">
           <h2 class="mb-3">Наличие мест</h2>
-          <div class="row mb-3">
+          <!-- <div class="row mb-3">
             <div class="col-2 pl-0">
               <img class="w-100" src="../../assets/room.jpg" />
             </div>
@@ -218,7 +218,7 @@
               <div>3 295 руб / сутки</div>
               <div class="btn btn-primary mt-3">Забронировать</div>
             </div>
-          </div>
+          </div> -->
         </div>
       </div>
     </div>
@@ -237,5 +237,37 @@
       integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
       crossorigin="anonymous"
     ></script>
+    
+
+    <script type="module">
+      import ApiService from '../../services/api.service.js';
+      let service = new ApiService();
+      let roomsElem = document.querySelector('.rooms');
+      service.getRooms().then(rooms => {
+        rooms.forEach(room => {
+          let roomElem = document.createElement('div');
+          roomElem.innerHTML = `
+            <div class="row mb-3">
+              <div class="col-2">
+                <img class="w-100" src="${room.img}" />
+              </div>
+              <div class="col">
+                <h4 class="room-title">
+                  ${room.name}
+                </h4>
+                <div class="room-description">
+                  ${room.description}
+                </div>
+              </div>
+              <div class="col-2 text-right">
+                <div>${room.price} руб / сутки</div>
+                <div class="btn btn-primary mt-3">Забронировать</div>
+              </div>
+            </div>
+          `;
+          roomsElem.append(roomElem.firstElementChild)
+        })
+      })
+    </script>
   </body>
 </html>
