@@ -34,8 +34,14 @@
             // return $queryText;
             $query = $this->database->db->query($queryText);
             $query->setFetchMode(PDO::FETCH_CLASS, 'Room');
+            $rooms = [];
+
+            while ($room = $query->fetch()) {
+                $room->dates = $this->GetRoomDates($room->id);
+                $rooms[] = $room;
+            }
             
-            return $query->fetchAll();
+            return $rooms;
             
         }
 
@@ -57,15 +63,12 @@
             
         }
 
-        public function GetRoomDates($roomId, $orderId = null){
+        private function GetRoomDates($roomId){
             if($roomId == null){
-                return array("message" => "Введите id автомобиля", "method" => "GetRoomDates", "requestData" => $roomId);
+                return array("message" => "Введите id комнаты", "method" => "GetRoomDates", "requestData" => $roomId);
             }
 
             $str = "SELECT id, dateFrom, dateTo from roomOrder WHERE dateFrom > now() AND roomId = ?";
-            if($orderId){
-                $str = $str." AND id != $orderId";
-            }
 
             $query = $this->database->db->prepare($str);
             $query->execute(array($roomId));

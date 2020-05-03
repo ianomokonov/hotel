@@ -1,4 +1,4 @@
-import UserService from './user.service.js';
+import UserService from "./user.service.js";
 
 export class ApiService {
   constructor() {
@@ -75,15 +75,18 @@ export class ApiService {
   getRooms(filters) {
     const url = new URL(this.baseUrl);
     url.searchParams.set("key", "get-rooms");
-    if (filters.fromDate) {
-      url.searchParams.set("dateFrom", filters.fromDate);
+    if (filters) {
+      if (filters.fromDate) {
+        url.searchParams.set("dateFrom", filters.fromDate);
+      }
+      if (filters.toDate && filters.toDate != filters.fromDate) {
+        url.searchParams.set("dateTo", filters.toDate);
+      }
+      if (filters.count) {
+        url.searchParams.set("count", filters.count);
+      }
     }
-    if (filters.toDate && filters.toDate != filters.fromDate) {
-      url.searchParams.set("dateTo", filters.toDate);
-    }
-    if (filters.count) {
-      url.searchParams.set("count", filters.count);
-    }
+
     return this.get(url.href);
   }
 

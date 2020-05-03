@@ -5,3 +5,24 @@ h3 i:hover{
     color: #007bff;
     cursor: pointer;
 }
+
+.capacity table{
+    width: 100%;
+}
+
+.capacity tr{
+    margin: 0;
+    min-height: 36px;
+    border-bottom: 1px solid #dee2e6;
+}
+.capacity table thead{
+    border-top: 1px solid #dee2e6;
+}
+.capacity tr td{
+    border-right: 1px solid #dee2e6;
+    text-align: center;
+}
+
+.capacity tr td.booked {
+     background-color: #dc3545;
+}

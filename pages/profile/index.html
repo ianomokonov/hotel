@@ -48,7 +48,7 @@
             >История заказов</a
           >
         </li>
-        <li class="nav-item">
+        <li class="nav-item capacity-nav-item">
           <a
             class="nav-link"
             id="capacity-tab"
@@ -71,13 +71,11 @@
           <div class="rooms"></div>
         </div>
         <div
-          class="tab-pane fade"
+          class="tab-pane fade capacity"
           id="capacity"
           role="tabpanel"
           aria-labelledby="capacity-tab"
-        >
-          ...
-        </div>
+        ></div>
       </div>
     </div>
 
@@ -151,9 +149,11 @@
       import ApiService from "../../services/api.service.js";
       import SearchService from "../../services/search.service.js";
       import UserService from "../../services/user.service.js";
+      import CapacityComponent from "./capacity.component.js";
       let service = new ApiService();
       let searchService = new SearchService();
       let userService = new UserService();
+
       if (!userService.token) {
         window.location.href = service.url + "/enter";
       }
@@ -179,12 +179,8 @@
         service.saveUserInfo(user).then(() => {
           console.log(user);
           updateUser();
-          $('.modal').modal('hide')
+          $(".modal").modal("hide");
         });
-        // service.cancelOrder(orderId).then(() => {
-        //   alert("Заказ успешно отменен");
-        //   getHistory();
-        // });
       };
 
       let cancelOrder = ({
@@ -228,6 +224,11 @@
         `;
             setUserModalForm(userInfo);
             getHistory();
+            if (userInfo.isAdmin != '1') {
+              $('.capacity-nav-item')[0].classList.add('d-none');
+              return;
+            }
+            getCapacity();
           }
         });
       };
@@ -304,6 +305,13 @@
                 .addEventListener("click", cancelOrder);
             }
           });
+        });
+      }
+
+      function getCapacity() {
+        service.getRooms().then((rooms) => {
+          let capacityComp = new CapacityComponent(rooms);
+          capacity.append(capacityComp.element);
         });
       }
 
