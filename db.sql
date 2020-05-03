@@ -5,29 +5,38 @@ CREATE TABLE IF NOT EXISTS user(
     surname varchar(255) NOT NULL,
     middlename varchar(255),
     email varchar(255) NOT NULL,
-    phone varchar (20),
     password varchar(255) NOT NUll
 );
 
-CREATE TABLE IF NOT EXISTS room(
+CREATE TABLE IF NOT EXISTS course(
     id int(10) PRIMARY KEY AUTO_INCREMENT,
-    img varchar(255) NOT NULL,
     name varchar(255) NOT NULL,
     description text NOT NULL,
-    price int(10) NOT NULL,
-    number varchar(10) NOT NULL,
-    roomCount int(2) DEFAULT 2
+    link varchar(255) NOT NULL,
+    points int(10) NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS roomOrder(
+CREATE TABLE IF NOT EXISTS question(
+    id int(10) PRIMARY KEY AUTO_INCREMENT,
+    courseId int(10) NOT NULL,
+    title varchar(255) NOT NULL,
+    FOREIGN KEY (courseId) REFERENCES course(id)
+);
+
+CREATE TABLE IF NOT EXISTS answer(
+    id int(10) PRIMARY KEY AUTO_INCREMENT,
+    questionId int(10) NOT NULL,
+    title varchar(255) NOT NULL,
+    isRight bit DEFAULT 0,
+    FOREIGN KEY (questionId) REFERENCES question(id)
+);
+
+CREATE TABLE IF NOT EXISTS userAnswer(
     id int(10) PRIMARY KEY AUTO_INCREMENT,
     userId int(10) NOT NULL,
-    roomId int(10) NOT NULL,
-    dateFrom DATE NOT NULL,
-    dateTo DATE NULL,
-    orderSum int(10) NOT NULL,
-    breakfast bit NULL,
-    cancel bit NULL,
+    questionId int(10) NOT NULL,
+    answerId int(10) NOT NULL,
     FOREIGN KEY (userId) REFERENCES user(id),
-    FOREIGN KEY (roomId) REFERENCES room(id)
+    FOREIGN KEY (questionId) REFERENCES question(id),
+    FOREIGN KEY (answerId) REFERENCES answer(id)
 );

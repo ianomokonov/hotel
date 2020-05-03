@@ -7,7 +7,7 @@ header("Access-Control-Allow-Headers: Origin, Content-Type, X-Auth-Token , Autho
 include_once 'repository.php';
 include_once './utils/token.php';
 
-$repository = new BookingRepository();
+$repository = new OlympicsRepository();
 $token = new Token();
 // http://localhost/controller.php?key=get-cars&id=3&name=John
 if(isset($_GET['key'])){
@@ -40,13 +40,10 @@ if(isset($_GET['key'])){
             $data = json_decode(file_get_contents("php://input"));
             echo json_encode($repository->SignUp($data));
             return;
-        case 'get-history':
-            if($decodeToken = checkToken($token, true)){
-                echo json_encode($repository->GetHistory($decodeToken->id, true));
-                return;
-            }
+        case 'get-courses':
             if($decodeToken = checkToken($token)){
-                echo json_encode($repository->GetHistory($decodeToken->id, false));
+                echo json_encode($repository->GetCourses());
+                return;
             }
             return;
         case 'get-user-info':

@@ -34,116 +34,30 @@
   </head>
   <body>
     <div class="container">
-      <a href="../home/home.html" class="btn btn-link pl-0 my-3">на главную</a>
       <div class="user-info mt-3 border rounded p-3" id="userForm"></div>
       <ul class="nav nav-tabs mt-3" id="myTab" role="tablist">
         <li class="nav-item">
           <a
             class="nav-link active"
-            id="history-tab"
+            id="courses-tab"
             data-toggle="tab"
-            href="#history"
+            href="#courses"
             role="tab"
-            aria-controls="history"
+            aria-controls="courses"
             aria-selected="true"
-            >История заказов</a
-          >
-        </li>
-        <li class="nav-item capacity-nav-item">
-          <a
-            class="nav-link"
-            id="capacity-tab"
-            data-toggle="tab"
-            href="#capacity"
-            role="tab"
-            aria-controls="capacity"
-            aria-selected="false"
-            >Загруженность номеров</a
+            >Курсы</a
           >
         </li>
       </ul>
       <div class="tab-content" id="myTabContent">
         <div
           class="tab-pane fade show active"
-          id="history"
+          id="courses"
           role="tabpanel"
-          aria-labelledby="history-tab"
+          aria-labelledby="courses-tab"
         >
-          <div class="rooms"></div>
+          <div class="courses"></div>
         </div>
-        <div
-          class="tab-pane fade capacity"
-          id="capacity"
-          role="tabpanel"
-          aria-labelledby="capacity-tab"
-        ></div>
-      </div>
-    </div>
-
-    <!-- Modal -->
-    <div
-      class="modal fade"
-      id="exampleModal"
-      tabindex="-1"
-      role="dialog"
-      aria-labelledby="exampleModalLabel"
-      aria-hidden="true"
-    >
-      <div class="modal-dialog" role="document">
-        <form id="userModalForm" class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="exampleModalLabel">
-              Редактирование пользователя
-            </h5>
-            <button
-              type="button"
-              class="close"
-              data-dismiss="modal"
-              aria-label="Close"
-            >
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div class="modal-body">
-            <div class="row">
-              <div class="col-sm-6 mb-3">
-                <label>Фамилия</label
-                ><input type="text" name="surname" class="form-control" />
-              </div>
-              <div class="col-sm-6 mb-3">
-                <label>Имя</label
-                ><input type="text" name="name" class="form-control" />
-              </div>
-              <div class="col-sm-6 mb-3">
-                <label>Отчество</label
-                ><input type="text" name="middlename" class="form-control" />
-              </div>
-              <div class="col-sm-6 mb-3">
-                <label>Телефон</label
-                ><input type="text" name="phone" class="form-control" />
-              </div>
-            </div>
-
-            <div class="row mb-3">
-              <div class="col-sm-12 mb-3">
-                <label>Email</label
-                ><input type="email" name="email" class="form-control" />
-              </div>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button
-              type="button"
-              class="btn btn-secondary"
-              data-dismiss="modal"
-            >
-              Отменить
-            </button>
-            <button type="button" class="btn btn-primary" name="save">
-              Сохранить
-            </button>
-          </div>
-        </form>
       </div>
     </div>
     <script type="module">
@@ -158,31 +72,8 @@
       if (!userService.token) {
         window.location.href = service.url + "/enter";
       }
-      let roomsElem = document.querySelector(".rooms");
-      let modal = document.querySelector(".modal");
+      let coursesElem = document.querySelector(".courses");
       let userInfo;
-
-      let saveUserInfo = () => {
-        let {
-          name,
-          surname,
-          middlename,
-          email,
-          phone,
-        } = userModalForm.elements;
-        let user = {
-          name: name.value,
-          surname: surname.value,
-          middlename: middlename.value,
-          email: email.value,
-          phone: phone.value,
-        };
-        service.saveUserInfo(user).then(() => {
-          console.log(user);
-          updateUser();
-          $(".modal").modal("hide");
-        });
-      };
 
       let cancelOrder = ({
         target: {
@@ -200,8 +91,7 @@
           if (user) {
             userInfo = user;
             userForm.innerHTML = `
-        <h3>Ваши данные <i class="fas fa-user-edit ml-3" title="Редактировать" data-toggle="modal"
-      data-target="#exampleModal"></i><i class="fas fa-sign-out-alt ml-3" id="exit" title="Выйти"></i></h3>
+        <h3>Ваши данные <i class="fas fa-sign-out-alt ml-3" id="exit" title="Выйти"></i></h3>
         <div class="row">
           <div class="col-6">
             <div class="form-group">
@@ -215,108 +105,45 @@
               <h6>${user.email}</h6>
             </div>
           </div>
-          <div class="col-4">
-            <div class="form-group">
-              <label>Телефон</label>
-              <h6>${user.phone}</h6>
-            </div>
-          </div>
         </div>
         `;
-            setUserModalForm(userInfo);
-            getHistory();
+            getCourses();
             exit.addEventListener("click", () => {
               userService.saveToken(null);
-              window.location.href = service.url + "/home";
+              window.location.href = service.url + "/enter";
             });
-            if (userInfo.isAdmin != "1") {
-              $(".capacity-nav-item")[0].classList.add("d-none");
-              return;
-            }
-            getCapacity();
           }
         });
       };
-
-      modal.addEventListener("hidden.bs.modal", function (e) {
-        console.log(e.detail);
-      });
 
       function getDate(date) {
         return new Date(date).toLocaleDateString();
       }
 
-      function setUserModalForm(user) {
-        Object.keys(user).forEach((key) => {
-          if (userModalForm.elements[key]) {
-            userModalForm.elements[key].value = user[key];
-          }
-        });
-
-        userModalForm.elements["save"].addEventListener("click", saveUserInfo);
-      }
-
-      function getHistory() {
-        service.getHistory().then((orders) => {
-          roomsElem.innerHTML = "";
-          if (!orders || !orders.length) {
-            roomsElem.innerHTML = `
+      function getCourses() {
+        service.getCourses().then((course) => {
+          coursesElem.innerHTML = "";
+          if (!courses || !courses.length) {
+            coursesElem.innerHTML = `
               <div class='text-center mt-3'>
-                <small class='text-muted text-center d-block'>Вы не сделали ни одного заказа</small>
-                <a class='btn btn-link pt-0' href='../home/home.html#filterForm'>Сделать заказ</a>
+                <small class='text-muted text-center d-block'>Вам не доступно ни одного курса</small>
               <div>`;
             return;
           }
-          orders.forEach((order) => {
-            let roomElem = document.createElement("div");
-            let periodDays = searchService.getPeriod(
-              new Date(order.dateFrom),
-              new Date(order.dateTo)
-            );
-            roomElem.innerHTML = `
+          courses.forEach((course) => {
+            let courseElem = document.createElement("div");
+            courseElem.innerHTML = `
               <div class="row mt-3">
+                <div class="col-10">
+                  <span>${course.name}</span>
+                </div>
                 <div class="col-2">
-                  <img class="w-100" src="${order.room.img}" />
-                </div>
-                <div class="col">
-                  <h4 class="room-title">
-                    ${order.room.name}
-                  </h4>
-                  <div class="room-description">
-                    ${getDate(order.dateFrom)}
-                    ${order.dateTo ? " - " + getDate(order.dateTo) : ""}
-                    <span class="ml-3">${
-                      order.breakfast ? "Завтраки включены" : ""
-                    }</span>
-                  </div>
-                  <div class="mt-1 ${userInfo.isAdmin === "1" ? "" : "d-none"}">
-                    <span class="mr-3">${`${userInfo.surname} ${userInfo.name} ${userInfo.middlename}`}</span>  
-                    <span class="mr-3">${userInfo.email}</span>  
-                    <span class="mr-3">${userInfo.phone}</span>  
-                  </div>
-                </div>
-                <div class="col-2 text-right">
-                  <div>${order.orderSum} руб</div>
-                  <div class="btn btn-outline-danger mt-3 ${
-                    order.cancel ? "" : "d-none"
-                  }" data-id="${order.id}">Отменить</div>
+                  <span>${course.points} очков</span>
                 </div>
               </div>
             `;
-            roomsElem.append(roomElem.firstElementChild);
-            if (order.cancel) {
-              roomsElem
-                .querySelector(".btn")
-                .addEventListener("click", cancelOrder);
-            }
+            coursesElem.append(roomElem.firstElementChild);
           });
-        });
-      }
-
-      function getCapacity() {
-        service.getRooms().then((rooms) => {
-          let capacityComp = new CapacityComponent(rooms);
-          capacity.append(capacityComp.element);
         });
       }
 

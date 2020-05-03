@@ -6,7 +6,7 @@
     class Token{
     
         // переменные, используемые для JWT 
-        private $key = ">7'-gZ)44TcM)=n@";
+        private $key = "5ea727a301bc6";
         private $iss = "http://any-site.org";
         private $aud = "http://any-site.com";
         private $iat = 1356999524;

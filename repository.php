@@ -4,11 +4,11 @@
     include_once './utils/database.php';
     include_once './utils/filesUpload.php';
     include_once 'models.php';
-    class BookingRepository{
+    class OlympicsRepository{
         private $database;
         private $token;
         private $filesUpload;
-        private $baseUrl = 'http://localhost/hotel';
+        private $baseUrl = 'http://localhost/olympics';
 
         public function __construct()
         {
@@ -77,28 +77,11 @@
             
         }
 
-        public function GetHistory($userId, $isAdmin){
-            if($userId == null){
-                return array("message" => "Введите id пользователя", "method" => "GetHistory", "requestData" => $userId);
-            }
-            $text = "SELECT * from roomOrder WHERE userId = ? ORDER BY dateFrom DESC";
-            if($isAdmin){
-                $text = "SELECT * from roomOrder ORDER BY dateFrom DESC";
-            }
-            $query = $this->database->db->prepare($text);
-            $query->execute(array($userId));
-            $query->setFetchMode(PDO::FETCH_CLASS, 'Order');
-            $orders = [];
-            while ($order = $query->fetch()) {
-                $order->room = $this->GetRoomDetails($order->roomId);
-                $order->room->dates = $this->GetRoomDates($order->roomId, $order->id);
-                if($isAdmin){
-                    $order->user = $this->getUserInfo($order->userId);
-                }
-                unset($order->userId);
-                $orders[] = $order;
-            }
-            return $orders;
+        public function GetCourses(){
+            $text = "SELECT * from course";
+            $query = $this->database->db->query($text);
+            $query->setFetchMode(PDO::FETCH_CLASS, 'Course');
+            return $query->fetchAll();
             
         }
 
@@ -164,7 +147,7 @@
         }
 
         public function getUserInfo($userId){
-            $sth = $this->database->db->prepare("SELECT name, surname, middlename, phone, email, isAdmin FROM user WHERE id = ? LIMIT 1");
+            $sth = $this->database->db->prepare("SELECT name, surname, middlename, email, isAdmin FROM user WHERE id = ? LIMIT 1");
             $sth->setFetchMode(PDO::FETCH_CLASS, 'User');
             $sth->execute(array($userId));
             return $sth->fetch();

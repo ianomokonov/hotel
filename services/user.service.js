@@ -1,15 +1,15 @@
 export class UserService {
-  key = "hotelUserInfo";
-  tokenKey = "hotelUserToken";
-  redirectKey = "hotelUserRedirect";
+  key = "olympicsUserInfo";
+  tokenKey = "olympicsUserToken";
+  redirectKey = "olympicsUserRedirect";
   user;
   token;
   defaultRedirect = '/profile';
   redirect = '/profile';
   constructor() {
-    this.user = JSON.parse(sessionStorage.getItem(this.key));
-    this.token = JSON.parse(sessionStorage.getItem(this.tokenKey));
-    this.redirect = JSON.parse(sessionStorage.getItem(this.redirectKey)) || this.defaultRedirect;
+    this.user = sessionStorage.getItem(this.key) ? JSON.parse(sessionStorage.getItem(this.key)) : null;
+    this.token = sessionStorage.getItem(this.tokenKey) ? JSON.parse(sessionStorage.getItem(this.tokenKey)) : null;
+    this.redirect = sessionStorage.getItem(this.redirectKey) ? JSON.parse(sessionStorage.getItem(this.redirectKey)) || this.defaultRedirect : null;
   }
 
   saveUser(user) {

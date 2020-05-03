@@ -2,8 +2,8 @@ import UserService from "./user.service.js";
 
 export class ApiService {
   constructor() {
-    this.baseUrl = "http://localhost/hotel/controller.php";
-    this.url = "http://localhost/hotel/pages";
+    this.baseUrl = "http://localhost/olympics/controller.php";
+    this.url = "http://localhost/olympics/pages";
     this.userService = new UserService();
   }
 
@@ -112,8 +112,8 @@ export class ApiService {
     return this.get(url);
   }
 
-  getHistory() {
-    const url = `${this.baseUrl}?key=get-history&token=${this.userService.token}`;
+  getCourses() {
+    const url = `${this.baseUrl}?key=get-courses&token=${this.userService.token}`;
     return this.get(url);
   }
 

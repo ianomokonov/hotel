@@ -30,10 +30,6 @@
             <label>Отчество</label
             ><input type="text" name="middlename" class="form-control" />
           </div>
-          <div class="col-sm-6 mb-3">
-            <label>Телефон</label
-            ><input type="text" name="phone" class="form-control" />
-          </div>
         </div>
 
         <div class="row mb-3">
@@ -62,7 +58,7 @@
       let regFields = document.querySelector(".registration");
       setEnter(enter);
       let onEnter = () => {
-        console.log(userForm.elements);
+        console.log(11);
         if (
           enter &&
           userForm.elements.email.value &&
@@ -74,34 +70,48 @@
               userForm.elements.password.value
             )
             .then((token) => {
-              console.log(token);
-              userService.saveToken(token);
-              window.location.href = service.url + userService.redirect;
+              if (token) {
+                userService.saveToken(token);
+                window.location.href = service.url + '/profile';
+              } else {
+                alert("Неверный логин или пароль");
+              }
             });
         }
 
-        if(!enter){
-            let {email, surname, name, password, middlename, phone} = userForm.elements;
-            if(!email.value || !password.value || !name.value || !surname.value){
-                return;
-            }
+        if (!enter) {
+          let {
+            email,
+            surname,
+            name,
+            password,
+            middlename,
+          } = userForm.elements;
+          if (
+            !email.value ||
+            !password.value ||
+            !name.value ||
+            !surname.value
+          ) {
+            return;
+          }
 
-            let user = {
-                email: email.value,
-                password: password.value,
-                name: name.value,
-                surname: surname.value,
-                middlename: middlename.value,
-                phone: phone.value
-            }
+          let user = {
+            email: email.value,
+            password: password.value,
+            name: name.value,
+            surname: surname.value,
+            middlename: middlename.value,
+          };
 
-            service
-            .signUp(
-              user
-            )
-            .then((token) => {
-              
-            });
+          service.signUp(user).then((token) => {
+            if (token) {
+              userService.saveToken(token);
+              window.location.href = service.url + '/profile';
+            } else {
+              alert("Такой пользователь уже существует");
+            }
+          });
         }
       };
       let reg = () => {

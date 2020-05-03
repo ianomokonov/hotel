@@ -1,7 +1,7 @@
 <?php
     //класс базы данных
     class DataBase {
-        private $dbname = "hotel";
+        private $dbname = "olympics";
         private $login = "root";
         private $password = "";
         public $db;
