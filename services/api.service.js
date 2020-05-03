@@ -57,13 +57,58 @@ export class ApiService {
     return this.post(url, data);
   }
 
+  uploadImage(file) {
+    console.log(file)
+    const formData = new FormData();
+    formData.append('RoomImage', file);
+    console.log(formData)
+    const url = `${this.baseUrl}?key=upload-room-img&token=${this.userService.token}`;
+    return fetch(url, {
+      method: "POST",
+      body: formData  ,
+    }).then((response) => {
+      if (response.ok) {
+        // если HTTP-статус в диапазоне 200-299
+        // получаем тело ответа (см. про этот метод ниже)
+        return response.json();
+      } else {
+        console.error("Ошибка HTTP: " + response.status);
+      }
+    })
+  }
+
+  addRoom(data) {
+    const url = `${this.baseUrl}?key=add-room&token=${this.userService.token}`;
+    return this.post(url, data);
+  }
+
+  updateRoom(data) {
+    const url = `${this.baseUrl}?key=update-room&token=${this.userService.token}`;
+    return this.post(url, data);
+  }
+
+  addOrder(data) {
+    const url = `${this.baseUrl}?key=add-order&token=${this.userService.token}`;
+    return this.post(url, data);
+  }
+
   cancelOrder(id) {
     const url = `${this.baseUrl}?key=cancel-order&orderId=${id}&token=${this.userService.token}`;
     return this.get(url);
   }
 
+  getRoom(id) {
+    const url = `${this.baseUrl}?key=get-room&roomId=${id}`;
+    return this.get(url);
+  }
+
   getUserInfo() {
     const url = `${this.baseUrl}?key=get-user-info&token=${this.userService.token}`;
+    return this.get(url);
+  }
+
+  checkUser() {
+    const url = `${this.baseUrl}?key=check-admin&token=${this.userService.token}`;
     return this.get(url);
   }
 

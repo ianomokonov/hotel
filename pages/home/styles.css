@@ -16,3 +16,15 @@
     margin: 0 auto;
 }
 
+.rooms .edit-btn, .rooms #addRoom{
+    display: none;
+}
+
+.rooms.edit .edit-btn, .rooms.edit #addRoom{
+    display: inline-block;
+
+}
+.rooms.edit .book-btn{
+    display: none !important;
+}
+

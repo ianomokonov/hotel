@@ -52,7 +52,7 @@
 
         public function GetRoomDetails($roomId){
             if($roomId == null){
-                return array("message" => "Введите id автомобиля", "method" => "GetRoomDetails", "requestData" => $roomId);
+                return array("message" => "Введите id комнаты", "method" => "GetRoomDetails", "requestData" => $roomId);
             }
 
             $query = $this->database->db->prepare("SELECT * from room WHERE id = ?");

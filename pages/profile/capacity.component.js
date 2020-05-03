@@ -23,7 +23,7 @@ export class CapacityComponent {
   get tableBody() {
       return `
       ${this.rooms.map(room => 
-        `<tr><td>${room.id}</td>${this.dates.map(d => 
+        `<tr><td>${room.number}</td>${this.dates.map(d => 
             `<td class="${room.dates.find(range => {
                 let dateFrom = new Date(range.dateFrom);
                 if(!range.dateTo){

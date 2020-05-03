@@ -12,6 +12,10 @@
     />
     <link rel="stylesheet" href="../../styles.css" />
     <link rel="stylesheet" href="./styles.css" />
+    <script
+      src="https://kit.fontawesome.com/3a4b557e16.js"
+      crossorigin="anonymous"
+    ></script>
   </head>
   <body>
     <div>
@@ -154,7 +158,7 @@
           </form>
         </div>
         <div class="my-3">
-          <h2 class="mb-3">Наличие мест</h2>
+          <h2 class="mb-3">Наличие мест <a id="addRoom"><i class="far fa-plus-square addRoom"></i></a></h2>
           <div class="rooms"></div>
         </div>
       </div>
@@ -256,14 +260,25 @@
                 </div>
                 <div class="col-2 text-right">
                   <div>${searchService.getPrice(filters, room.price)} руб / сутки</div>
-                  <div class="btn btn-primary mt-3" data-id="${
+                  <div class="btn btn-primary mt-3 book-btn" data-id="${
                     room.id
                   }">Забронировать</div>
+                  <a class="btn btn-primary mt-3 edit-btn" href="${
+                    service.url + '/room/index.html?id=' + room.id
+                  }">Редактировать</a>
                 </div>
               </div>
             `;
             roomsElem.append(roomElem.firstElementChild);
-            roomsElem.querySelector(".btn").addEventListener("click", bookRoom);
+            service.checkUser().then(isAdmin => {
+              if(!isAdmin){
+                roomsElem.querySelector(".book-btn").addEventListener("click", bookRoom);
+              } else {
+                roomsElem.classList.add('edit');
+                addRoom.href = service.url + '/room';
+              }
+            })
+            
           });
         });
       }

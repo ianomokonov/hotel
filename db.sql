@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS room(
     name varchar(255) NOT NULL,
     description text NOT NULL,
     price int(10) NOT NULL,
+    number varchar(10) NOT NULL,
     roomCount int(2) DEFAULT 2
 );
 
