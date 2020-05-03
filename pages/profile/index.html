@@ -11,14 +11,24 @@
       crossorigin="anonymous"
     />
     <link rel="stylesheet" href="../../styles.css" />
+    <link rel="stylesheet" href="./styles.css" />
     <script
       src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
       integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
       crossorigin="anonymous"
     ></script>
     <script
+      src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+      integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+      crossorigin="anonymous"
+    ></script>
+    <script
       src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
       integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://kit.fontawesome.com/3a4b557e16.js"
       crossorigin="anonymous"
     ></script>
   </head>
@@ -70,13 +80,112 @@
         </div>
       </div>
     </div>
+
+    <!-- Modal -->
+    <div
+      class="modal fade"
+      id="exampleModal"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="exampleModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog" role="document">
+        <form id="userModalForm" class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">
+              Редактирование пользователя
+            </h5>
+            <button
+              type="button"
+              class="close"
+              data-dismiss="modal"
+              aria-label="Close"
+            >
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="row">
+              <div class="col-sm-6 mb-3">
+                <label>Фамилия</label
+                ><input type="text" name="surname" class="form-control" />
+              </div>
+              <div class="col-sm-6 mb-3">
+                <label>Имя</label
+                ><input type="text" name="name" class="form-control" />
+              </div>
+              <div class="col-sm-6 mb-3">
+                <label>Отчество</label
+                ><input type="text" name="middlename" class="form-control" />
+              </div>
+              <div class="col-sm-6 mb-3">
+                <label>Телефон</label
+                ><input type="text" name="phone" class="form-control" />
+              </div>
+            </div>
+
+            <div class="row mb-3">
+              <div class="col-sm-12 mb-3">
+                <label>Email</label
+                ><input type="email" name="email" class="form-control" />
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-dismiss="modal"
+            >
+              Отменить
+            </button>
+            <button type="button" class="btn btn-primary" name="save">
+              Сохранить
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
     <script type="module">
       import ApiService from "../../services/api.service.js";
       import SearchService from "../../services/search.service.js";
+      import UserService from "../../services/user.service.js";
       let service = new ApiService();
       let searchService = new SearchService();
+      let userService = new UserService();
+      if (!userService.token) {
+        window.location.href = service.url + "/enter";
+      }
       let roomsElem = document.querySelector(".rooms");
+      let modal = document.querySelector(".modal");
       let userInfo;
+
+      let saveUserInfo = () => {
+        let {
+          name,
+          surname,
+          middlename,
+          email,
+          phone,
+        } = userModalForm.elements;
+        let user = {
+          name: name.value,
+          surname: surname.value,
+          middlename: middlename.value,
+          email: email.value,
+          phone: phone.value,
+        };
+        service.saveUserInfo(user).then(() => {
+          console.log(user);
+          updateUser();
+          $('.modal').modal('hide')
+        });
+        // service.cancelOrder(orderId).then(() => {
+        //   alert("Заказ успешно отменен");
+        //   getHistory();
+        // });
+      };
 
       let cancelOrder = ({
         target: {
@@ -89,11 +198,13 @@
         });
       };
 
-      service.getUserInfo().then((user) => {
-        if (user) {
-          userInfo = user;
-          userForm.innerHTML = `
-        <h3>Ваши данные</h3>
+      let updateUser = () => {
+        service.getUserInfo().then((user) => {
+          if (user) {
+            userInfo = user;
+            userForm.innerHTML = `
+        <h3>Ваши данные <i class="fas fa-user-edit ml-3" title="Редактировать" data-toggle="modal"
+      data-target="#exampleModal"></i></h3>
         <div class="row">
           <div class="col-6">
             <div class="form-group">
@@ -115,12 +226,28 @@
           </div>
         </div>
         `;
-          getHistory();
-        }
+            setUserModalForm(userInfo);
+            getHistory();
+          }
+        });
+      };
+
+      modal.addEventListener("hidden.bs.modal", function (e) {
+        console.log(e.detail);
       });
 
       function getDate(date) {
         return new Date(date).toLocaleDateString();
+      }
+
+      function setUserModalForm(user) {
+        Object.keys(user).forEach((key) => {
+          if (userModalForm.elements[key]) {
+            userModalForm.elements[key].value = user[key];
+          }
+        });
+
+        userModalForm.elements["save"].addEventListener("click", saveUserInfo);
       }
 
       function getHistory() {
@@ -156,7 +283,7 @@
                       order.breakfast ? "Завтраки включены" : ""
                     }</span>
                   </div>
-                  <div class="mt-1 ${userInfo.isAdmin === '1' ? '' : 'd-none'}">
+                  <div class="mt-1 ${userInfo.isAdmin === "1" ? "" : "d-none"}">
                     <span class="mr-3">${`${userInfo.surname} ${userInfo.name} ${userInfo.middlename}`}</span>  
                     <span class="mr-3">${userInfo.email}</span>  
                     <span class="mr-3">${userInfo.phone}</span>  
@@ -179,6 +306,8 @@
           });
         });
       }
+
+      updateUser();
     </script>
   </body>
 </html>

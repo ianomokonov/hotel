@@ -28,5 +28,5 @@ CREATE TABLE IF NOT EXISTS roomOrder(
     breakfast bit NULL,
     cancel bit NULL,
     FOREIGN KEY (userId) REFERENCES user(id),
-    FOREIGN KEY (roomId) REFERENCES room(id),
+    FOREIGN KEY (roomId) REFERENCES room(id)
 );

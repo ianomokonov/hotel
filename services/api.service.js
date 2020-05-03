@@ -47,6 +47,11 @@ export class ApiService {
     return this.post(url, data);
   }
 
+  saveUserInfo(data) {
+    const url = `${this.baseUrl}?key=update-user-info&token=${this.userService.token}`;
+    return this.post(url, data);
+  }
+
   addOrder(data) {
     const url = `${this.baseUrl}?key=add-order&token=${this.userService.token}`;
     return this.post(url, data);
