@@ -56,19 +56,13 @@
           role="tabpanel"
           aria-labelledby="courses-tab"
         >
-          <form id="courseForm" class="border rounded p-3 mt-3">
+          <form id="courseForm" class="border rounded p-3 mt-3 d-none">
             <h4>Добавление/изменение курса</h4>
             <div class="row">
-              <div class="col-8">
+              <div class="col-12">
                 <div class="form-group">
                   <label>Название</label
                   ><input name="name" type="text" class="form-control" />
-                </div>
-              </div>
-              <div class="col-4">
-                <div class="form-group">
-                  <label>Количество очков</label
-                  ><input name="points" type="number" class="form-control" />
                 </div>
               </div>
               <div class="col-12">
@@ -105,26 +99,28 @@
     </div>
     <script type="module">
       import ApiService from "../../services/api.service.js";
-      import SearchService from "../../services/search.service.js";
       import UserService from "../../services/user.service.js";
       let service = new ApiService();
       let userService = new UserService();
       let courseInfo;
       let courseList;
+      let userInfo;
 
       saveCourse.addEventListener("click", () => {
+        if (!userInfo.isAdmin) {
+          return;
+        }
         let {
           name: { value: name },
-          points: { value: points },
           description: { value: description },
           link: { value: link },
         } = courseForm.elements;
 
-        if (!name || !points || !description || !link) {
+        if (!name || !description || !link) {
           alert("Заполните все поля");
           return;
         }
-        const newCourse = { name, points, description, link };
+        const newCourse = { name, description, link };
         if (courseInfo) {
           newCourse.id = courseInfo.id;
           service.updateCourse(newCourse).then(() => {
@@ -143,7 +139,11 @@
         const btn = target.closest("button");
         if (btn.dataset.id) {
           if (target.closest(".btn-link")) {
-            window.location.href = service.url + "/course/index.html?id="+btn.dataset.id;
+            window.location.href =
+              service.url + "/course/index.html?id=" + btn.dataset.id;
+            return;
+          }
+          if (!userInfo.isAdmin) {
             return;
           }
           courseInfo = courseList.find((c) => c.id == btn.dataset.id);
@@ -156,7 +156,6 @@
       }
       let coursesElem = document.querySelector(".courses");
       coursesElem.addEventListener("click", onEditCourseClick);
-      let userInfo;
 
       let cancelEditing = () => {
         let { name, points, description, link } = courseForm.elements;
@@ -174,6 +173,11 @@
         service.getUserInfo().then((user) => {
           if (user) {
             userInfo = user;
+            if(userInfo.isAdmin){
+              courseForm.classList.remove('d-none');
+            } else {
+              courseForm.classList.add('d-none');
+            }
             userForm.innerHTML = `
         <h3>Ваши данные <i class="fas fa-sign-out-alt ml-3" id="exit" title="Выйти"></i></h3>
         <div class="row">
@@ -187,6 +191,12 @@
             <div class="form-group">
               <label>Email</label>
               <h6>${user.email}</h6>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="form-group">
+              <label>Очки</label>
+              <h6>${user.points}</h6>
             </div>
           </div>
         </div>
@@ -224,13 +234,22 @@
           courses.forEach((course) => {
             let courseElem = document.createElement("div");
             courseElem.innerHTML = `
-            <button data-id="${course.id}" type="button" class="list-group-item list-group-item-action">
+            <button data-id="${
+              course.id
+            }" type="button" class="list-group-item list-group-item-action">
               <div class="row">
-                <div class="col-10">
-                  <span>${course.name}</span>
+                <div class="col-9">
+                  <a target="blank" href="${course.link}">${course.name}</a>
                 </div>
-                <div class="col-2 text-right">
-                  <span class="badge badge-info ">${course.points} очков</span>
+                <div class="col-3 text-right">
+                  <span class="badge badge-info ">Вопросов: ${
+                    course.points
+                  }</span>
+                  ${
+                    +course.correctPoints > 0
+                      ? `<small class="d-block text-muted">Последняя попытка: ${course.correctPoints}</small>`
+                      : ""
+                  }
                 </div>
               </div>
               <small class="mt-3 text-muted">${course.description}</small>

@@ -1,8 +1,12 @@
-/* #questionForm .answers i{
-    height: 100%;
-    min-width: 40px;
-    font-size: 30px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-} */
+
+.bg-success .btn-link, .bg-danger .btn-link{
+    color: white !important;
+}
+
+#content [data-elem-edit-question] {
+    display: none;
+}
+
+#content.admin [data-elem-edit-question] {
+    display: inline-block !important;
+}

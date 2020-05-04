@@ -18,7 +18,7 @@ if(isset($_GET['key'])){
                     echo json_encode($decodeToken->isAdmin == "1");
                 }
             }
-            echo false;
+            echo json_encode(false);
             return;
         case 'get-course':
             echo json_encode($repository->GetCourseDetails($_GET['courseId']));
@@ -45,7 +45,7 @@ if(isset($_GET['key'])){
             return;
         case 'get-courses':
             if($decodeToken = checkToken($token)){
-                echo json_encode($repository->GetCourses());
+                echo json_encode($repository->GetCourses($decodeToken->id));
                 return;
             }
             return;
@@ -68,28 +68,10 @@ if(isset($_GET['key'])){
                 echo json_encode($repository->UpdateCourse($data));
             }
             return;
-        case 'update-user-info':
+        case 'save-answers':
             if($decodeToken = checkToken($token)){
                 $data = json_decode(file_get_contents("php://input"));
-                echo json_encode($repository->UpdateUserInfo($decodeToken->id, $data));
-            }
-            return;
-        case 'update-order':
-            if($decodeToken = checkToken($token)){
-                $data = json_decode(file_get_contents("php://input"));
-                echo json_encode($repository->UpdateOrder($data));
-            }
-            return;
-        case 'cancel-order':
-            if($decodeToken = checkToken($token)){
-                echo json_encode($repository->CancelOrder($_GET['orderId']));
-            }
-            return;
-        case 'upload-room-img':
-            if($decodeToken = checkToken($token, true)){
-                echo json_encode($repository->UploadRoomImg($_FILES['RoomImage']));
-            } else {
-                echo json_encode(array("message" => "В доступе отказано"));
+                echo json_encode($repository->SaveAnswers($decodeToken->id, $data));
             }
             return;
         default: 

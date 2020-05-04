@@ -2,7 +2,6 @@
     //обработка запросов
     include_once './utils/token.php';
     include_once './utils/database.php';
-    include_once './utils/filesUpload.php';
     include_once 'models.php';
     class OlympicsRepository{
         private $database;
@@ -14,12 +13,6 @@
         {
             $this->database = new DataBase();
             $this->token = new Token();
-            $this->filesUpload = new FilesUpload();
-        }
-
-        public function UploadRoomImg($file){
-            $newFileName = $this->filesUpload->upload($file, 'Files', uniqid());
-            return $this->baseUrl.'/Files'.'/'.$newFileName;
         }
 
         public function GetCourseDetails($courseId){
@@ -63,8 +56,8 @@
             return $query->fetchAll();            
         }
 
-        public function GetCourses(){
-            $text = "SELECT * from course";
+        public function GetCourses($userId){
+            $text = "SELECT link, name, id, description, (select COUNT(*) from question WHERE question.courseId = course.id) as points, (SELECT COUNT(*) FROM `useranswer` u JOIN question q ON u.questionId = q.id JOIN answer a ON u.answerId = a.id WHERE q.courseId = course.id AND a.isRight = '1' AND u.userId = $userId) as correctPoints from course";
             $query = $this->database->db->query($text);
             $query->setFetchMode(PDO::FETCH_CLASS, 'Course');
             return $query->fetchAll();
@@ -126,13 +119,42 @@
             return array('message' => 'Вопрос обновлен');
         }
 
-        public function CancelOrder($orderId){
-            if(!$orderId){
-                return array("message" => "Укажите id заказа", "method" => "CancelOrder", "requestData" => $orderId);
+        public function SaveAnswers($userId, $answers){
+            if(!$answers){
+                return array("message" => "Укажите ответы", "method" => "SaveAnswers", "requestData" => $answers);
             }
-            $query = $this->database->db->prepare("DELETE FROM roomOrder WHERE id=?");
-            $query->execute(array($orderId));
-            return array('message' => 'Заказ отменен');
+
+            $points = [];
+            
+            foreach ($answers as $answer){
+                $answer->userId = $userId;
+                $questionId = $answer->questionId;
+                $answerId = $answer->answerId;
+                $this->database->db->query("DELETE FROM useranswer WHERE questionId = $questionId");
+                $this->AddUserAnswer($answer);
+                $query = $this->database->db->query("SELECT * FROM answer WHERE id = $answerId");
+                if($query->fetch()['isRight'] == '1'){
+                    $points[] = $questionId;
+                }
+            }
+
+            $this->AddUserPoints($userId);
+
+            return $points;
+        }
+
+        private function AddUserAnswer($answer){
+            $insert = $this->database->genInsertQuery((array)$answer, 'userAnswer');
+            $query = $this->database->db->prepare($insert[0]);
+            if($insert[1][0]!=null){
+                $query->execute($insert[1]);
+            }
+        }
+
+        private function AddUserPoints($userId){
+            $curPoints = $this->database->db->query("SELECT COUNT(*) as points FROM useranswer u JOIN answer a ON u.answerId = a.id WHERE a.isRight = '1' AND u.userId = $userId")->fetch()['points'];
+            
+            $this->database->db->query("UPDATE user SET points = $curPoints WHERE id = $userId");
         }
 
         public function SignIn($user = null){
@@ -157,10 +179,12 @@
         }
 
         public function getUserInfo($userId){
-            $sth = $this->database->db->prepare("SELECT name, surname, middlename, email, isAdmin FROM user WHERE id = ? LIMIT 1");
+            $sth = $this->database->db->prepare("SELECT name, surname, middlename, email, isAdmin, points FROM user WHERE id = ? LIMIT 1");
             $sth->setFetchMode(PDO::FETCH_CLASS, 'User');
             $sth->execute(array($userId));
-            return $sth->fetch();
+            $user = $sth->fetch();
+            $user->isAdmin = $user->isAdmin == '1';
+            return $user;
         }
 
         public function UpdateUserInfo($userId, $user){
