@@ -16,6 +16,7 @@ if(isset($_GET['key'])){
             if($decodeToken = checkToken($token, true)){
                 if($decodeToken){
                     echo json_encode($decodeToken->isAdmin == "1");
+                    return;
                 }
             }
             echo json_encode(false);
