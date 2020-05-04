@@ -4,21 +4,21 @@
         public $name;
         public $surname;
         public $middlename;
-        public $phone;
         public $email;
     }
 
-    class Room {
+    class Course {
         public $id;
-        public $img;
         public $name;
         public $description;
-        public $price;
+        public $points;
+        public $questions;
     }
 
-    class Place {
+    class Question {
         public $id;
-        public $name;
+        public $title;
+        public $courseId;
     }
 
     class Order {

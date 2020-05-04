@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Тест</title>
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+      integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
+      crossorigin="anonymous"
+    />
+    <script
+      src="https://kit.fontawesome.com/3a4b557e16.js"
+      crossorigin="anonymous"
+    ></script>
+    <link rel="stylesheet" href="styles.css" />
+    <script
+      src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
+      integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+      integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+      integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+      crossorigin="anonymous"
+    ></script>
+  </head>
+  <body>
+    <div class="container">
+      <form id="questionForm" class="border rounded p-3 mt-3">
+        <div class="form-group">
+          <label>Вопрос</label>
+          <textarea class="form-control" name="question" rows="3"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Ответы</label>
+          <div id="newQuestionAnswers" class="answers"></div>
+        </div>
+        <button type="button" id="saveNewQuestion" class="btn btn-primary">
+          Сохранить
+        </button>
+        <button
+          type="button"
+          id="canselEditQuestion"
+          class="btn btn-secondary d-none"
+        >
+          Отменить
+        </button>
+      </form>
+    </div>
+    <div id="content" class="container pt-5"></div>
+    <script type="module">
+      import ApiService from "../../services/api.service.js";
+      let service = new ApiService();
+      let url = new URL(window.location.href);
+      let courseInfo;
+      let questionModel;
+      if (url.searchParams.get("id")) {
+        getCourse(url.searchParams.get("id"));
+      } else {
+        window.history.back();
+      }
+
+      setAddForm();
+
+      content.addEventListener("click", ({ target }) => {
+        const btn = target.closest("[data-elem-edit-question]");
+        if (btn) {
+          questionModel = courseInfo.questions.find(
+            (q) => q.id == btn.dataset.id
+          );
+          setAddForm(questionModel);
+          return;
+        }
+      });
+
+      canselEditQuestion.addEventListener("click", () => {
+        questionModel = null;
+        setAddForm();
+      });
+
+      saveNewQuestion.addEventListener("click", () => {
+        let newAnswers = [];
+        const rows = newQuestionAnswers.querySelectorAll(".row:not(.header)");
+        const question = questionForm.elements.question.value;
+        if (!question) {
+          alert("Укажите вопрос");
+          return;
+        }
+        if (rows.length < 2) {
+          alert("Задайте более 2 ответов");
+          return;
+        }
+        let isRightOk = false;
+        for (let row of rows) {
+          const isRight = row.querySelector("input[type=radio]");
+          const title = row.querySelector("input[type=text]");
+          newAnswers.push({ title: title.value, isRight: isRight.checked });
+          if (isRight.checked) {
+            isRightOk = true;
+          }
+        }
+
+        if (!isRightOk) {
+          alert("Укажите правильный ответ");
+          return;
+        }
+
+        let q = {
+          courseId: courseInfo.id,
+          title: question,
+          answers: newAnswers,
+        };
+
+        if (questionModel) {
+          q.id = questionModel.id;
+          service.updateQuestion(q).then(() => {
+            getCourse(courseInfo.id);
+            setAddForm();
+          });
+        } else {
+          service.addQuestion(q).then(() => {
+            getCourse(courseInfo.id);
+            setAddForm();
+          });
+        }
+      });
+
+      newQuestionAnswers.addEventListener("click", ({ target }) => {
+        let btn = target.closest("button");
+        if (!btn) {
+          return;
+        }
+
+        if (btn.closest("[data-add-answer")) {
+          const answer = document.createElement("div");
+          answer.innerHTML = `
+            <div class="row mb-1">
+              <div class="col-2 pt-1">
+                <input class="form-check-input ml-3" type="radio" name="newAnswer">
+              </div>
+              <div class="col d-flex">
+                <input class="form-control" type="text">
+                <button type="button" data-remove-answer class="btn btn-outline-danger ml-1"><i class="fas fa-minus"></i></button>
+                <button type="button" data-add-answer class="btn btn-outline-success  ml-1"><i class="fas fa-plus"></i></button>
+              </div>
+            </div>
+        `;
+          const row = btn.closest(".row");
+          console.log([answer.firstElementChild, row.nextElementSibling]);
+          if (row.nextElementSibling) {
+            newQuestionAnswers.insertBefore(
+              answer.firstElementChild,
+              row.nextElementSibling
+            );
+          } else {
+            newQuestionAnswers.append(answer.firstElementChild);
+          }
+        }
+
+        if (
+          btn.closest("[data-remove-answer]") &&
+          !btn.closest("[data-remove-answer]").disabled
+        ) {
+          const row = btn.closest(".row");
+          row.remove();
+        }
+      });
+
+      function setAddForm(question) {
+        questionModel = question;
+        if(questionModel){
+          canselEditQuestion.classList.remove("d-none");
+        } else {
+          canselEditQuestion.classList.add("d-none");
+        }
+        questionForm.elements.question.value = question ? question.title : "";
+        newQuestionAnswers.innerHTML = `
+            <div class="row header">
+              <div class="col-2">
+                Правильный?
+              </div>
+              <div class="col">
+                Значение
+              </div>
+            </div>
+        `;
+        if (question && question.answers) {
+          question.answers.forEach((a, i) => {
+            const answer = document.createElement("div");
+            answer.innerHTML = `
+            <div class="row mb-1">
+              <div class="col-2 pt-1">
+                <input class="form-check-input ml-3" type="radio" name="newAnswer" ${
+                  a.isRight == "1" ? "checked" : ""
+                }>
+              </div>
+              <div class="col d-flex">
+                <input class="form-control" type="text" value="${a.title}">
+                <button type="button" data-remove-answer class="btn btn-outline-danger ml-1" ${
+                  i === 0 ? "disabled" : ""
+                }><i class="fas fa-minus"></i></button>
+                <button type="button" data-add-answer class="btn btn-outline-success  ml-1"><i class="fas fa-plus"></i></button>
+              </div>
+            </div>
+        `;
+            newQuestionAnswers.append(answer.firstElementChild);
+          });
+        } else {
+          const answer = document.createElement("div");
+          answer.innerHTML = `
+            <div class="row mb-1">
+              <div class="col-2 pt-1">
+                <input class="form-check-input ml-3" type="radio" name="newAnswer">
+              </div>
+              <div class="col d-flex">
+                <input class="form-control" type="text">
+                <button type="button" data-remove-answer class="btn btn-outline-danger ml-1" disabled><i class="fas fa-minus"></i></button>
+                <button type="button" data-add-answer class="btn btn-outline-success  ml-1"><i class="fas fa-plus"></i></button>
+              </div>
+            </div>
+        `;
+          newQuestionAnswers.append(answer.firstElementChild);
+        }
+      }
+
+      function getCourse(id) {
+        service.getCourse(id).then((course) => {
+          courseInfo = course;
+          content.innerHTML = `
+            <h3>${courseInfo.name}</h3>
+            
+            <form id="testForm" class="accordion">
+              ${getQuestions(course) || ""}
+            </form>
+          `;
+        });
+      }
+
+      function getQuestions({ questions } = {}) {
+        console.log(questions);
+        if (questions) {
+          return questions
+            .map((q) => {
+              return `
+            <div class="card">
+              <div class="card-header" id="heading${q.id}">
+                <h2 class="mb-0 d-flex justify-content-between">
+                  <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapse${
+                    q.id
+                  }" aria-expanded="true" aria-controls="collapse${q.id}">
+                    ${q.title}
+                  </button>
+                  <div data-id="${
+                    q.id
+                  }" data-elem-edit-question class="btn btn-link"><i class="fas fa-edit"></i></div>
+                </h2>
+              </div>
+
+              <div id="collapse${
+                q.id
+              }" class="collapse" aria-labelledby="heading${
+                q.id
+              }" data-parent="#testForm">
+                <div class="card-body">
+                  ${getAnswers(q)}
+                </div>
+              </div>
+            </div>
+            `;
+            })
+            .join("");
+        } else {
+          return "";
+        }
+      }
+      function getAnswers({ id, answers } = {}) {
+        console.log(answers);
+        if (answers) {
+          return answers
+            .map((a) => {
+              return `
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="answer${id}" id="answer${a.id}" value="${a.id}">
+              <label class="form-check-label" for="answer${a.id}">
+                ${a.title}
+              </label>
+            </div>
+            `;
+            })
+            .join("");
+        } else {
+          return "";
+        }
+      }
+    </script>
+  </body>
+</html>

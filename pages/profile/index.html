@@ -56,7 +56,50 @@
           role="tabpanel"
           aria-labelledby="courses-tab"
         >
-          <div class="courses"></div>
+          <form id="courseForm" class="border rounded p-3 mt-3">
+            <h4>Добавление/изменение курса</h4>
+            <div class="row">
+              <div class="col-8">
+                <div class="form-group">
+                  <label>Название</label
+                  ><input name="name" type="text" class="form-control" />
+                </div>
+              </div>
+              <div class="col-4">
+                <div class="form-group">
+                  <label>Количество очков</label
+                  ><input name="points" type="number" class="form-control" />
+                </div>
+              </div>
+              <div class="col-12">
+                <div class="form-group">
+                  <label>Ссылка на лекцию</label
+                  ><input name="link" type="text" class="form-control" />
+                </div>
+              </div>
+              <div class="col-12">
+                <div class="form-group">
+                  <label>Описание</label
+                  ><textarea
+                    class="form-control"
+                    name="description"
+                    rows="3"
+                  ></textarea>
+                </div>
+              </div>
+            </div>
+            <button type="button" id="saveCourse" class="btn btn-primary">
+              Сохранить
+            </button>
+            <button
+              type="button"
+              id="cancelEditingBtn"
+              class="btn btn-secondary d-none"
+            >
+              Отмена
+            </button>
+          </form>
+          <div class="courses list-group mt-3"></div>
         </div>
       </div>
     </div>
@@ -64,27 +107,68 @@
       import ApiService from "../../services/api.service.js";
       import SearchService from "../../services/search.service.js";
       import UserService from "../../services/user.service.js";
-      import CapacityComponent from "./capacity.component.js";
       let service = new ApiService();
-      let searchService = new SearchService();
       let userService = new UserService();
+      let courseInfo;
+      let courseList;
+
+      saveCourse.addEventListener("click", () => {
+        let {
+          name: { value: name },
+          points: { value: points },
+          description: { value: description },
+          link: { value: link },
+        } = courseForm.elements;
+
+        if (!name || !points || !description || !link) {
+          alert("Заполните все поля");
+          return;
+        }
+        const newCourse = { name, points, description, link };
+        if (courseInfo) {
+          newCourse.id = courseInfo.id;
+          service.updateCourse(newCourse).then(() => {
+            cancelEditing();
+            getCourses();
+          });
+        } else {
+          service.addCourse(newCourse).then(() => {
+            cancelEditing();
+            getCourses();
+          });
+        }
+      });
+
+      let onEditCourseClick = ({ target }) => {
+        const btn = target.closest("button");
+        if (btn.dataset.id) {
+          if (target.closest(".btn-link")) {
+            window.location.href = service.url + "/course/index.html?id="+btn.dataset.id;
+            return;
+          }
+          courseInfo = courseList.find((c) => c.id == btn.dataset.id);
+          setCourse(courseInfo);
+        }
+      };
 
       if (!userService.token) {
         window.location.href = service.url + "/enter";
       }
       let coursesElem = document.querySelector(".courses");
+      coursesElem.addEventListener("click", onEditCourseClick);
       let userInfo;
 
-      let cancelOrder = ({
-        target: {
-          dataset: { id: orderId },
-        },
-      }) => {
-        service.cancelOrder(orderId).then(() => {
-          alert("Заказ успешно отменен");
-          getHistory();
-        });
+      let cancelEditing = () => {
+        let { name, points, description, link } = courseForm.elements;
+        name.value = "";
+        points.value = "";
+        description.value = "";
+        link.value = "";
+        courseInfo = null;
+        cancelEditingBtn.classList.add("d-none");
       };
+
+      cancelEditingBtn.addEventListener("click", cancelEditing);
 
       let updateUser = () => {
         service.getUserInfo().then((user) => {
@@ -116,13 +200,19 @@
         });
       };
 
-      function getDate(date) {
-        return new Date(date).toLocaleDateString();
+      function setCourse(course) {
+        Object.keys(course).forEach((key) => {
+          if (courseForm.elements[key]) {
+            courseForm.elements[key].value = course[key];
+          }
+        });
+        cancelEditingBtn.classList.remove("d-none");
       }
 
       function getCourses() {
-        service.getCourses().then((course) => {
+        service.getCourses().then((courses) => {
           coursesElem.innerHTML = "";
+          courseList = courses || [];
           if (!courses || !courses.length) {
             coursesElem.innerHTML = `
               <div class='text-center mt-3'>
@@ -130,19 +220,24 @@
               <div>`;
             return;
           }
+
           courses.forEach((course) => {
             let courseElem = document.createElement("div");
             courseElem.innerHTML = `
-              <div class="row mt-3">
+            <button data-id="${course.id}" type="button" class="list-group-item list-group-item-action">
+              <div class="row">
                 <div class="col-10">
                   <span>${course.name}</span>
                 </div>
-                <div class="col-2">
-                  <span>${course.points} очков</span>
+                <div class="col-2 text-right">
+                  <span class="badge badge-info ">${course.points} очков</span>
                 </div>
               </div>
+              <small class="mt-3 text-muted">${course.description}</small>
+              <div class="btn btn-link pl-0">Пройти тест</div>
+            </button>+
             `;
-            coursesElem.append(roomElem.firstElementChild);
+            coursesElem.append(courseElem.firstElementChild);
           });
         });
       }

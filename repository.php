@@ -17,64 +17,50 @@
             $this->filesUpload = new FilesUpload();
         }
 
-        public function GetRooms($query){
-            
-            $queryText = "SELECT * FROM room WHERE ";
-            if(isset($query['dateFrom']) && isset($query['dateTo']) && !!($dateFrom = $query['dateFrom']) && $dateTo = $query['dateTo']){
-                $queryText = $queryText."0 = (SELECT COUNT(*) FROM roomOrder co WHERE co.roomId = room.id ) OR 0 = (SELECT COUNT(*) FROM roomOrder co WHERE co.dateFrom = '$dateFrom' OR co.dateTo = '$dateTo' OR co.dateFrom > '$dateFrom' AND co.dateTo < '$dateTo' OR co.dateFrom < '$dateFrom' AND co.dateTo > '$dateTo' OR co.dateFrom > '$dateFrom' AND co.dateFrom < '$dateTo' AND co.dateTo > '$dateTo' OR co.dateTo > '$dateFrom' AND co.dateTo < '$dateTo' AND co.dateFrom < '$dateFrom') AND";
-            }
-            if(!isset($query['dateTo']) && isset($query['dateFrom']) && $dateFrom = $query['dateFrom']){
-                $queryText = $queryText."0 = (SELECT COUNT(*) FROM roomOrder co WHERE co.roomId = room.id ) OR 0 = (SELECT COUNT(*) FROM roomOrder co WHERE co.dateFrom = '$dateFrom' OR co.dateTo = '$dateFrom' OR co.dateFrom < '$dateFrom' AND co.dateTo > '$dateFrom') AND";
-            }
-            if(isset($query['count']) && $count = $query['count']){
-                $queryText = $queryText." roomCount >= $count";
-            }
-            $queryText = rtrim($queryText,'AND');
-            $queryText = rtrim($queryText,'WHERE ');
-            // return $queryText;
-            $query = $this->database->db->query($queryText);
-            $query->setFetchMode(PDO::FETCH_CLASS, 'Room');
-            $rooms = [];
-
-            while ($room = $query->fetch()) {
-                $room->dates = $this->GetRoomDates($room->id);
-                $rooms[] = $room;
-            }
-            
-            return $rooms;
-            
-        }
-
         public function UploadRoomImg($file){
             $newFileName = $this->filesUpload->upload($file, 'Files', uniqid());
             return $this->baseUrl.'/Files'.'/'.$newFileName;
         }
 
-        public function GetRoomDetails($roomId){
-            if($roomId == null){
-                return array("message" => "Введите id комнаты", "method" => "GetRoomDetails", "requestData" => $roomId);
+        public function GetCourseDetails($courseId){
+            if($courseId == null){
+                return array("message" => "Введите id курса", "method" => "GetCourseDetails", "requestData" => $courseId);
             }
 
-            $query = $this->database->db->prepare("SELECT * from room WHERE id = ?");
-            $query->execute(array($roomId));
-            $query->setFetchMode(PDO::FETCH_CLASS, 'Room');
+            $query = $this->database->db->prepare("SELECT * from course WHERE id = ?");
+            $query->execute(array($courseId));
+            $query->setFetchMode(PDO::FETCH_CLASS, 'Course');
             
-            return $query->fetch();
+            $course = $query->fetch();
+            $course->questions = $this->GetCourseQuestions($course->id);
+            return $course;
+        }
+
+        private function GetCourseQuestions($courseId){
+            if($courseId == null){
+                return array("message" => "Введите id курса", "method" => "GetRoomDates", "requestData" => $courseId);
+            }
+
+            $str = "SELECT * from question WHERE courseId = ?";
+
+            $query = $this->database->db->prepare($str);
+            $query->execute(array($courseId));
+            $query->setFetchMode(PDO::FETCH_CLASS, 'Question');
+            $questions = [];
+
+            while ($question = $query->fetch()) {
+                $question->answers = $this->GetQuestionAnswers($question->id);
+                $questions[] = $question;
+            }
+            return $questions;
             
         }
 
-        private function GetRoomDates($roomId){
-            if($roomId == null){
-                return array("message" => "Введите id комнаты", "method" => "GetRoomDates", "requestData" => $roomId);
-            }
-
-            $str = "SELECT id, dateFrom, dateTo from roomOrder WHERE dateFrom > now() AND roomId = ?";
-
-            $query = $this->database->db->prepare($str);
-            $query->execute(array($roomId));
-            $query->setFetchMode(PDO::FETCH_CLASS, 'DateRange');
-            return $query->fetchAll();
-            
+        public function GetQuestionAnswers($questionId){
+            $query = $this->database->db->prepare("SELECT * from answer WHERE questionId = ?");
+            $query->execute(array($questionId));
+            $query->setFetchMode(PDO::FETCH_CLASS, 'Answer');
+            return $query->fetchAll();            
         }
 
         public function GetCourses(){
@@ -84,36 +70,60 @@
             return $query->fetchAll();
             
         }
-
-        public function AddOrder($userId, $order){
-            if($userId == null){
-                return array("message" => "Вы не вошли", "method" => "AddOrder", "requestData" => array("userId" => $userId, "order" => $order));
+        public function AddQuestion($question){
+            if($question == null){
+                return array("message" => "Вопрос пуст", "method" => "AddQuestion", "requestData" => $question);
             }
-            if($order == null){
-                return array("message" => "Заказ пуст", "method" => "AddOrder", "requestData" => array("userId" => $userId, "order" => $order));
-            }
-            $order->userId = $userId;
-            $insert = $this->database->genInsertQuery((array)$order, 'roomOrder');
+            $answers = $question->answers;
+            
+            unset($question->answers);
+            $insert = $this->database->genInsertQuery((array)$question, 'question');
             $query = $this->database->db->prepare($insert[0]);
             if($insert[1][0]!=null){
                 $query->execute($insert[1]);
             }
 
-            return $this->database->db->lastInsertId();
+            $id = $this->database->db->lastInsertId();
+            foreach ($answers as $answer){
+                
+                $answer->questionId = $id;
+                $this->AddAnswer($answer);
+            }
+
+            return $id;
             
         }
 
-        public function UpdateOrder($order){
-            if(!$order || !isset($order->id) || !$order->id){
-                return array("message" => "Укажите id заказа", "method" => "UpdateOrder", "requestData" => $order);
+        private function AddAnswer($answer){
+            $insert = $this->database->genInsertQuery((array)$answer, 'answer');
+            $query = $this->database->db->prepare($insert[0]);
+            if($insert[1][0]!=null){
+                $query->execute($insert[1]);
+            }
+        }
+
+        private function RemoveAnswers($questionId){
+            $this->database->db->query("DELETE FROM answer WHERE questionId = $questionId");
+        }
+
+        public function UpdateQuestion($question){
+            if(!$question || !isset($question->id) || !$question->id){
+                return array("message" => "Укажите id вопроса", "method" => "UpdateOrder", "requestData" => $question);
             }
 
-            $orderId = $order->id;
-            unset($order->id);
-            $a = $this->database->genUpdateQuery(array_keys((array)$order), array_values((array)$order), "roomOrder", $orderId);
+            $questionId = $question->id;
+            unset($question->id);
+            $answers = $question->answers;
+            unset($question->answers);
+            $a = $this->database->genUpdateQuery(array_keys((array)$question), array_values((array)$question), "question", $questionId);
             $query = $this->database->db->prepare($a[0]);
             $query->execute($a[1]);
-            return array('message' => 'Заказ обновлен');
+            $this->RemoveAnswers($questionId);
+            foreach ($answers as $answer){
+                $answer->questionId = $questionId;
+                $this->AddAnswer($answer);
+            }
+            return array('message' => 'Вопрос обновлен');
         }
 
         public function CancelOrder($orderId){
@@ -188,21 +198,21 @@
             }
         }
 
-        public function AddRoom($room = null){
-            if($room != null){
+        public function AddCourse($course = null){
+            if($course != null){
                 try{
-                    $insert = $this->database->genInsertQuery((array)$room, 'room');
+                    $insert = $this->database->genInsertQuery((array)$course, 'course');
                     $query = $this->database->db->prepare($insert[0]);
                     if ($insert[1][0]!=null) {
                         $query->execute($insert[1]);
                     }
                     return $this->database->db->lastInsertId();
                 } catch(Exception $e) {
-                    return array("message" => "Ошибка добавления автомобиля", "error" => $e->getMessage());
+                    return array("message" => "Ошибка добавления курса", "error" => $e->getMessage());
                 }
                 
             } else {
-                return array("message" => "Введите данные автомобиля");
+                return array("message" => "Введите данные курса");
             }
         }
 
@@ -222,28 +232,17 @@
             return $num > 0;
         }
 
-        public function UpdateRoom($room){
-            if($room == null || !isset($room->id)){
-                return array("message" => "Укажите id автомобиля", "method" => "UpdateRoom", "requestData" => $room);
+        public function UpdateCourse($course){
+            if($course == null || !isset($course->id)){
+                return array("message" => "Укажите id курса", "method" => "UpdateСourse", "requestData" => $course);
             }
 
-            $roomId = $room->id;
-            unset($room->id);
-            if($room->oldImg && $room->img != $room->oldImg){
-                $this->removeFile($room->oldImg);
-            }
-            unset($room->oldImg);
-            $a = $this->database->genUpdateQuery(array_keys((array)$room), array_values((array)$room), "room", $roomId);
+            $courseId = $course->id;
+            unset($course->id);
+            $a = $this->database->genUpdateQuery(array_keys((array)$course), array_values((array)$course), "course", $courseId);
             $query = $this->database->db->prepare($a[0]);
             $query->execute($a[1]);
-            return array('message' => 'Автомобиль обновлен');
-        }
-
-        private function removeFile($filelink){
-            $path = explode($this->baseUrl.'/', $filelink);
-            if($path[1] && file_exists($path[1])){
-                unlink($path[1]);
-            }
+            return array('message' => 'Курс обновлен');
         }
 
     }

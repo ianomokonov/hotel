@@ -20,16 +20,19 @@ if(isset($_GET['key'])){
             }
             echo false;
             return;
-        case 'get-rooms':
-            echo json_encode($repository->GetRooms($_GET));
+        case 'get-course':
+            echo json_encode($repository->GetCourseDetails($_GET['courseId']));
             return;
-        case 'get-room':
-            echo json_encode($repository->GetRoomDetails($_GET['roomId']));
-            return;
-        case 'add-order':
-            if($decodeToken = checkToken($token)){
+        case 'add-question':
+            if($decodeToken = checkToken($token, true)){
                 $data = json_decode(file_get_contents("php://input"));
-                echo json_encode($repository->AddOrder($decodeToken->id, $data));
+                echo json_encode($repository->AddQuestion($data));
+            }
+            return;
+        case 'update-question':
+            if($decodeToken = checkToken($token, true)){
+                $data = json_decode(file_get_contents("php://input"));
+                echo json_encode($repository->UpdateQuestion($data));
             }
             return;
         case 'sign-in':
@@ -53,16 +56,16 @@ if(isset($_GET['key'])){
                 return;
             }
             return;
-        case 'add-room':
+        case 'add-course':
             if($decodeToken = checkToken($token, true)){
                 $data = json_decode(file_get_contents("php://input"));
-                echo json_encode($repository->AddRoom($data));
+                echo json_encode($repository->AddCourse($data));
             }
             return;
-        case 'update-room':
+        case 'update-course':
             if($decodeToken = checkToken($token, true)){
                 $data = json_decode(file_get_contents("php://input"));
-                echo json_encode($repository->UpdateRoom($data));
+                echo json_encode($repository->UpdateCourse($data));
             }
             return;
         case 'update-user-info':

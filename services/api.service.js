@@ -77,18 +77,23 @@ export class ApiService {
     })
   }
 
-  addRoom(data) {
-    const url = `${this.baseUrl}?key=add-room&token=${this.userService.token}`;
+  addCourse(data) {
+    const url = `${this.baseUrl}?key=add-course&token=${this.userService.token}`;
     return this.post(url, data);
   }
 
-  updateRoom(data) {
-    const url = `${this.baseUrl}?key=update-room&token=${this.userService.token}`;
+  updateCourse(data) {
+    const url = `${this.baseUrl}?key=update-course&token=${this.userService.token}`;
     return this.post(url, data);
   }
 
-  addOrder(data) {
-    const url = `${this.baseUrl}?key=add-order&token=${this.userService.token}`;
+  addQuestion(data) {
+    const url = `${this.baseUrl}?key=add-question&token=${this.userService.token}`;
+    return this.post(url, data);
+  }
+
+  updateQuestion(data) {
+    const url = `${this.baseUrl}?key=update-question&token=${this.userService.token}`;
     return this.post(url, data);
   }
 
@@ -97,8 +102,8 @@ export class ApiService {
     return this.get(url);
   }
 
-  getRoom(id) {
-    const url = `${this.baseUrl}?key=get-room&roomId=${id}`;
+  getCourse(id) {
+    const url = `${this.baseUrl}?key=get-course&courseId=${id}`;
     return this.get(url);
   }
 
