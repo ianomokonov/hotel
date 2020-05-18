@@ -30,7 +30,8 @@ export class CapacityComponent {
                     return dateFrom.toLocaleDateString() === d.toLocaleDateString(); 
                 }
                 let dateTo = new Date(range.dateTo);
-                return dateFrom.getTime() <= d.getTime() && dateTo.getTime() >= d.getTime(); 
+                console.log([dateFrom.toLocaleDateString(), d.toLocaleDateString()])
+                return (dateFrom.toLocaleDateString() == d.toLocaleDateString() || dateFrom.getTime() <= d.getTime()) && (dateTo.toLocaleDateString() == d.toLocaleDateString() || dateTo.getTime() >= d.getTime()); 
             }) ? 'booked' : ''}"></td>`
           ).join('')}
         </tr>`

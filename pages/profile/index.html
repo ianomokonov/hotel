@@ -189,16 +189,19 @@
           dataset: { id: orderId },
         },
       }) => {
-        service.cancelOrder(orderId).then(() => {
-          alert("Заказ успешно отменен");
-          getHistory();
-        });
+        if (confirm("Вы уверены, что хотите отменить заказ?")) {
+          service.cancelOrder(orderId).then(() => {
+            alert("Заказ успешно отменен");
+            getHistory();
+          });
+        }
       };
 
       let updateUser = () => {
         service.getUserInfo().then((user) => {
           if (user) {
             userInfo = user;
+            userInfo.isAdmin = userInfo.isAdmin == "1"
             userForm.innerHTML = `
         <h3>Ваши данные <i class="fas fa-user-edit ml-3" title="Редактировать" data-toggle="modal"
       data-target="#exampleModal"></i><i class="fas fa-sign-out-alt ml-3" id="exit" title="Выйти"></i></h3>
@@ -229,7 +232,7 @@
               userService.saveToken(null);
               window.location.href = service.url + "/home";
             });
-            if (userInfo.isAdmin != "1") {
+            if (!userInfo.isAdmin) {
               $(".capacity-nav-item")[0].classList.add("d-none");
               return;
             }
@@ -268,6 +271,8 @@
             return;
           }
           orders.forEach((order) => {
+            order.cancel = order.cancel == '1';
+            order.breakfast = order.breakfast == '1';
             let roomElem = document.createElement("div");
             let periodDays = searchService.getPeriod(
               new Date(order.dateFrom),
@@ -289,7 +294,7 @@
                       order.breakfast ? "Завтраки включены" : ""
                     }</span>
                   </div>
-                  <div class="mt-1 ${userInfo.isAdmin === "1" ? "" : "d-none"}">
+                  <div class="mt-1 ${userInfo.isAdmin ? "" : "d-none"}">
                     <span class="mr-3">${`${userInfo.surname} ${userInfo.name} ${userInfo.middlename}`}</span>  
                     <span class="mr-3">${userInfo.email}</span>  
                     <span class="mr-3">${userInfo.phone}</span>  
@@ -298,14 +303,15 @@
                 <div class="col-2 text-right">
                   <div>${order.orderSum} руб</div>
                   <div class="btn btn-outline-danger mt-3 ${
-                    order.cancel ? "" : "d-none"
+                    order.cancel || userInfo.isAdmin ? "" : "d-none"
                   }" data-id="${order.id}">Отменить</div>
                 </div>
               </div>
             `;
-            roomsElem.append(roomElem.firstElementChild);
-            if (order.cancel) {
-              roomsElem
+            roomElem = roomElem.firstElementChild;
+            roomsElem.append(roomElem);
+            if (order.cancel || userInfo.isAdmin) {
+              roomElem
                 .querySelector(".btn")
                 .addEventListener("click", cancelOrder);
             }

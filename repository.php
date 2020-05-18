@@ -68,7 +68,7 @@
                 return array("message" => "Введите id комнаты", "method" => "GetRoomDates", "requestData" => $roomId);
             }
 
-            $str = "SELECT id, dateFrom, dateTo from roomOrder WHERE dateFrom > now() AND roomId = ?";
+            $str = "SELECT id, dateFrom, dateTo from roomOrder WHERE dateTo > now() AND roomId = ?";
 
             $query = $this->database->db->prepare($str);
             $query->execute(array($roomId));
