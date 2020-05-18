@@ -16,7 +16,7 @@
     margin: 0 auto;
 }
 
-.rooms .edit-btn, .rooms #addRoom{
+.rooms .edit-btn{
     display: none;
 }
 

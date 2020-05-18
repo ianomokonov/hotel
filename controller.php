@@ -16,9 +16,13 @@ if(isset($_GET['key'])){
             if($decodeToken = checkToken($token, true)){
                 if($decodeToken){
                     echo json_encode($decodeToken->isAdmin == "1");
+                } else {
+                    echo json_encode(false);
                 }
+            } else {
+                echo json_encode(false);
             }
-            echo false;
+            
             return;
         case 'get-rooms':
             echo json_encode($repository->GetRooms($_GET));

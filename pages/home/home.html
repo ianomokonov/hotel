@@ -117,11 +117,7 @@
               <div class="col">
                 <div class="form-group">
                   <label>Дата выезда</label>
-                  <input
-                    class="form-control"
-                    type="date"
-                    name="toDate"
-                  />
+                  <input class="form-control" type="date" name="toDate" />
                 </div>
               </div>
               <div class="col">
@@ -158,7 +154,10 @@
           </form>
         </div>
         <div class="my-3">
-          <h2 class="mb-3">Наличие мест <a id="addRoom"><i class="far fa-plus-square addRoom"></i></a></h2>
+          <h2 class="mb-3">
+            Наличие мест
+            <a id="addRoom" class="d-none"><i class="far fa-plus-square addRoom"></i></a>
+          </h2>
           <div class="rooms"></div>
         </div>
       </div>
@@ -234,18 +233,32 @@
 
       filterChange();
 
+      function setAdmin(isAdmin) {
+        console.log(isAdmin);
+        if (!isAdmin) {
+          addRoom.classList.add("d-none");
+        } else {
+          roomsElem.classList.add("edit");
+          addRoom.classList.remove("d-none");
+          addRoom.href = service.url + "/room";
+        }
+      }
+
       function getRooms(filters) {
         if (!filters.fromDate) {
           roomsElem.innerHTML =
             "<small class='text-muted d-block text-center'>Укажите период бронирования</small>";
-          return;
         }
-        service.getRooms(filters).then((rooms) => {
-          roomList = rooms;
-          roomsElem.innerHTML = "";
-          rooms.forEach((room) => {
-            let roomElem = document.createElement("div");
-            roomElem.innerHTML = `
+        Promise.all([service.getRooms(filters), service.checkUser()]).then(
+          ([rooms, isAdmin]) => {
+            if(!filters.fromDate && !isAdmin){
+              return;
+            }
+            roomList = rooms;
+            roomsElem.innerHTML = "";
+            rooms.forEach((room) => {
+              let roomElem = document.createElement("div");
+              roomElem.innerHTML = `
               <div class="row mb-3">
                 <div class="col-2">
                   <img class="w-100" src="${room.img}" />
@@ -259,41 +272,46 @@
                   </div>
                 </div>
                 <div class="col-2 text-right">
-                  <div>${searchService.getPrice(filters, room.price)} руб / сутки</div>
+                  <div>${searchService.getPrice(
+                    filters,
+                    room.price
+                  )} руб / сутки</div>
                   <div class="btn btn-primary mt-3 book-btn" data-id="${
                     room.id
                   }">Забронировать</div>
                   <a class="btn btn-primary mt-3 edit-btn" href="${
-                    service.url + '/room/index.html?id=' + room.id
+                    service.url + "/room/index.html?id=" + room.id
                   }">Редактировать</a>
                 </div>
               </div>
             `;
-            roomsElem.append(roomElem.firstElementChild);
-            service.checkUser().then(isAdmin => {
-              if(!isAdmin){
-                roomsElem.querySelector(".book-btn").addEventListener("click", bookRoom);
-              } else {
-                roomsElem.classList.add('edit');
-                addRoom.href = service.url + '/room';
-              }
-            })
-            
-          });
-        });
+              roomsElem.append(roomElem.firstElementChild);
+            });
+            if (!isAdmin) {
+              roomsElem
+                .addEventListener("click", bookRoom);
+            }
+          }
+        );
       }
-
-      
 
       filterForm.addEventListener("input", filterChange);
 
       let bookRoom = ({ target: element } = {}) => {
+        element = element.closest('.btn[data-id]');
+        if(!element){
+          return;
+        }
         let room = roomList.find((room) => room.id == element.dataset.id);
         searchService.saveRoom(room);
-        window.location.href = service.url + '/booking';
+        window.location.href = service.url + "/booking";
       };
 
       getRooms(filters);
+
+      service.checkUser().then((isAdmin) => {
+        setAdmin(isAdmin);
+      });
     </script>
   </body>
 </html>

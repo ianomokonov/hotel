@@ -21,10 +21,10 @@
             
             $queryText = "SELECT * FROM room WHERE ";
             if(isset($query['dateFrom']) && isset($query['dateTo']) && !!($dateFrom = $query['dateFrom']) && $dateTo = $query['dateTo']){
-                $queryText = $queryText."0 = (SELECT COUNT(*) FROM roomOrder co WHERE co.roomId = room.id ) OR 0 = (SELECT COUNT(*) FROM roomOrder co WHERE co.dateFrom = '$dateFrom' OR co.dateTo = '$dateTo' OR co.dateFrom > '$dateFrom' AND co.dateTo < '$dateTo' OR co.dateFrom < '$dateFrom' AND co.dateTo > '$dateTo' OR co.dateFrom > '$dateFrom' AND co.dateFrom < '$dateTo' AND co.dateTo > '$dateTo' OR co.dateTo > '$dateFrom' AND co.dateTo < '$dateTo' AND co.dateFrom < '$dateFrom') AND";
+                $queryText = $queryText."(0 = (SELECT COUNT(*) FROM roomOrder co WHERE co.roomId = room.id ) OR 0 = (SELECT COUNT(*) FROM roomOrder co WHERE co.dateFrom = '$dateFrom' OR co.dateTo = '$dateTo' OR co.dateFrom > '$dateFrom' AND co.dateTo < '$dateTo' OR co.dateFrom < '$dateFrom' AND co.dateTo > '$dateTo' OR co.dateFrom > '$dateFrom' AND co.dateFrom < '$dateTo' AND co.dateTo > '$dateTo' OR co.dateTo > '$dateFrom' AND co.dateTo < '$dateTo' AND co.dateFrom < '$dateFrom')) AND";
             }
             if(!isset($query['dateTo']) && isset($query['dateFrom']) && $dateFrom = $query['dateFrom']){
-                $queryText = $queryText."0 = (SELECT COUNT(*) FROM roomOrder co WHERE co.roomId = room.id ) OR 0 = (SELECT COUNT(*) FROM roomOrder co WHERE co.dateFrom = '$dateFrom' OR co.dateTo = '$dateFrom' OR co.dateFrom < '$dateFrom' AND co.dateTo > '$dateFrom') AND";
+                $queryText = $queryText."(0 = (SELECT COUNT(*) FROM roomOrder co WHERE co.roomId = room.id ) OR 0 = (SELECT COUNT(*) FROM roomOrder co WHERE co.dateFrom = '$dateFrom' OR co.dateTo = '$dateFrom' OR co.dateFrom < '$dateFrom' AND co.dateTo > '$dateFrom')) AND";
             }
             if(isset($query['count']) && $count = $query['count']){
                 $queryText = $queryText." roomCount >= $count";
